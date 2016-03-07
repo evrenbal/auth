@@ -1,0 +1,33 @@
+{
+    "name": "baka/auth",
+    "description": "Baka Component for user authentification",
+    "authors": [
+        {
+            "name": "kaioken",
+            "email": "max@mctekk.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.4",
+        "ext-phalcon": ">=2.0.4",
+        "vlucas/phpdotenv": "^2.0"
+    },
+    "require-dev": {
+        "codeception/verify": "*",
+        "vlucas/phpdotenv": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Baka\\Auth\\": "src/",
+            "Baka\\Auth\\Models": "src/models"
+        }
+    },
+     "autoload-dev": {
+        "psr-4": {
+            "Baka\\Auth\\": "src/",
+            "Baka\\Auth\\Models": "src/models"
+
+        }
+    }   
+}
