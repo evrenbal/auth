@@ -2,8 +2,8 @@
 
 namespace Baka\Auth;
 
-use Naruhodo\Models\Users\UserLinkedSources;
-use Naruhodo\Models\Users\Users;
+use Auth\Models\UserLinkedSources;
+use Auth\Models\Users;
 use Phalcon\Events\Event;
 use Phalcon\Mvc\Dispatcher;
 use Phalcon\Validation;
@@ -14,7 +14,11 @@ use Phalcon\Validation\Validator\StringLength;
 
 class AuthentificationManager extends \Phalcon\Mvc\Controller
 {
-    use \Naruhodo\Traits\HttpBehavior;
+    protected $successLoginRedirect = '/';
+    protected $successLoginRedirectNoWelcome = '/user/welcome';
+    protected $successRegistrationRedirectAction = 'welcome';
+    protected $failedRegistrationRedirectAction = 'welcome';
+    protected $failedActivationRedirectAction = '404';
 
     /**
      * User login form
@@ -27,7 +31,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
         if ($this->request->isPost() && $this->security->checkToken()) {
             $username = $this->request->getPost('username', 'string');
             $password = $this->request->getPost('password', 'string');
-            $admin = $this->request->getPost('site_naruhodo_admin');
+            $admin = $this->request->getPost('site_baka_admin');
             $userIp = $this->request->getClientAddress();
             $remember = 1;
 
@@ -52,9 +56,9 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                 //did the user complete the welcome page?
                 if ($this->userData->welcome) {
-                    return $this->response->redirect();
+                    return $this->response->redirect($this->successLoginRedirect);
                 } else {
-                    return $this->response->redirect($this->userData->getLanguageUrl() . '/user/welcome');
+                    return $this->response->redirect($this->userData->getLanguageUrl() . $this->successLoginRedirectNoWelcome);
                 }
 
             } catch (\Exception $e) {
@@ -101,9 +105,6 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
      */
     public function signupAction()
     {
-        $this->tag->setTitle(_('Sign up'));
-        //change user template
-        $this->view->pick('user/home');
 
         //si existe ya la session de social connect significa que vienes de una cuenta de connect social
         if ($socialConnect = is_array($this->session->get('socialConnect'))) {
@@ -153,7 +154,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                     //error redirect
                     return $this->dispatcher->forward([
-                        'action' => 'home',
+                        'action' => $this->failedRegistrationRedirectAction,
                     ]);
                 }
 
@@ -172,7 +173,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                     //error redirect
                     return $this->dispatcher->forward([
-                        'action' => 'home',
+                        'action' => $this->failedRegistrationRedirectAction,
                     ]);
                 }
 
@@ -187,7 +188,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                 //page confirmation
                 if ($this->userData->isLoggedIn()) {
                     return $this->dispatcher->forward([
-                        'action' => 'welcome',
+                        'action' => $this->successRegistrationRedirectAction,
                     ]);
                 } else {
                     //create a session with the user activation key , to resent the user email if he didnt get it
@@ -195,16 +196,9 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                     $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
 
                     //user registration send email
-                    $email = [
-                        'subject' => 'Signup complete',
-                        'to' => [$user->email => $user->displayname],
-                        'body' => sprintf(_('Thank you for signing up in Naruho.do, use this link to activate your account: %sActivate account%s'), '<a href="' . $activationUrl . '">', '</a>'),
-                        'icon' => 'simley03',
-                    ];
+                    $this->sendEmail('signup', $user);
 
-                    $this->queue->putInTube(EMAIL_QUEUE, $email);
-
-                    return $this->response->redirect($this->userData->getLanguageUrl() . '/user/activate/' . $user->user_activation_key);
+                    return $this->response->redirect('/user/activate/' . $user->user_activation_key);
                 }
             }
         }
@@ -250,15 +244,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                 $recoveryLink = $this->config->application->siteUrl . '/user/reset/' . $recoverUser->user_activation_forgot;
                 $recoveryLink = '<a href="' . $recoveryLink . '>' . _('here') . '</a>';
 
-                $email = [
-                    'subject' => _('Password Recovery'),
-                    'to' => [$recoverUser->email => $recoverUser->displayname],
-                    'body' => sprintf(_('Click %shere%s to set a new password for your account.'), '<a href="' . $recoveryLink . '" target="_blank">', '</a>'),
-                    'icon' => 'simley03',
-
-                ];
-
-                $this->queue->putInTube(EMAIL_QUEUE, $email);
+                $this->sendEmail('recover', $recoverUser);
 
                 return;
             } else {
@@ -278,7 +264,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
         if (empty($key) || !$userData = Users::findFirst(['user_activation_forgot = :key:', 'bind' => ['key' => $key]])) {
             return $this->dispatcher->forward([
                 "controller" => 'index',
-                "action" => "route401",
+                "action" => $this->failedActivationRedirectAction,
             ]);
         }
 
@@ -324,15 +310,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                     $this->view->setVar('changedPassword', true);
                     $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
 
-                    // Send email
-                    $email = [
-                        'subject' => _('Signup complete!'),
-                        'to' => [$user->email => $user->displayname],
-                        'body' => sprintf(_('Thank you for signing up in Naruho.do, use this link to activate your account: %sActivate account%s'), '<a href="' . $activationUrl . '">', '</a>'),
-                        'icon' => 'simley03',
-                    ];
-
-                    $this->queue->putInTube(EMAIL_QUEUE, $emailMessage);
+                    $this->sendEmail('reset', $user);
 
                     return;
                     //$this->flash->success(_('Congratulations! You\'ve successfully changed your password.'));
@@ -363,10 +341,10 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
             $remember = 1;
 
             //login the user , so we just create the user session base on the user object
-            $session = new \Naruhodo\Models\Sessions\Sessions();
+            $session = new \Auth\Models\Sessions();
             $userSession = $session->session_begin($user->user_id, $userIp, PAGE_INDEX, false, $remember, $admin);
 
-            return $this->response->redirect($this->userData->getLanguageUrl() . '/user/welcome');
+            return $this->response->redirect($this->successLoginRedirectNoWelcome);
         }
 
         //die('Thanks you for registration to naruho.do');
@@ -376,16 +354,11 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
             if ($user) // = Users::findFirstByUser_activation_key($token))
             {
                 $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
-                //user registration send email
-                $email = [
-                    'subject' => _('Signup complete!'),
-                    'to' => [$user->email => $user->displayname],
-                    'body' => sprintf(_('Thank you for signing up in Naruho.do, use this link to activate your account: %sActivate account%s'), '<a href="' . $activationUrl . '">', '</a>'),
-                    'icon' => 'simley03',
-                ];
 
+                //user registration send email
                 $this->flash->success(_('Please check your email inbox to complete the password recovery.'));
-                $this->queue->putInTube(EMAIL_QUEUE, $email);
+
+                $this->sendEmail('thankyou', $user);
 
                 return;
             }
@@ -404,7 +377,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
             //no lo encontramos pagina de error
             return $this->dispatcher->forward([
                 "controller" => 'index',
-                "action" => "route401",
+                "action" => $this->failedActivationRedirectAction,
             ]);
         }
 
@@ -419,12 +392,12 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
             $this->flash->notice(_('Please complete the Welcome process to get you started!'));
 
             //login the user and send them to welcome
-            $session = new \Naruhodo\Models\Sessions\Sessions();
+            $session = new \Baka\Auth\Models\Sessions();
             $userIp = $this->request->getClientAddress();
             $session->session_begin($userData->user_id, $userIp, PAGE_INDEX, false, true, false);
 
             //now login and go to welcome page
-            return $this->response->redirect($this->userData->getLanguageUrl() . '/user/welcome');
+            return $this->response->redirect($this->successLoginRedirectNoWelcome);
 
         } elseif ($userData->isActive()) {
             //wtf? are you doing here and still with an activation key?
@@ -437,7 +410,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
             //no lo encontramos pagina de error
             return $this->dispatcher->forward([
                 "controller" => 'index',
-                "action" => "route401",
+                "action" => $this->failedActivationRedirectAction,
             ]);
         }
     }
@@ -454,7 +427,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
 
             if (is_object($userProfile)) {
                 //si esta cuenta ya esta linked te logeamos
-                $UserLinkedSources = new \Naruhodo\Models\Users\UserLinkedSources();
+                $UserLinkedSources = new \Baka\Auth\Models\UserLinkedSources();
 
                 //if you already are a existing social profile , if not we send you to signup
                 if ($UserLinkedSources->existSocialProfile($userProfile, $site)) {
@@ -503,6 +476,24 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
     }
 
     /**
+     * Set the email config array we are going to be sending
+     *
+     * @param String $emailAction
+     * @param Users  $user
+     */
+    protected function sendEmail($emailAction, Users $user)
+    {
+        /* $email = [
+        'subject' => 'Signup complete',
+        'to' => [$user->email => $user->displayname],
+        'body' => sprintf(_('Thank you for signing up in Naruho.do, use this link to activate your account: %sActivate account%s'), '<a href="' . $activationUrl . '">', '</a>'),
+        'icon' => 'simley03',
+        ];*/
+
+        return [];
+    }
+
+    /**
      * social connect callback page
      * @return void
      */
@@ -527,9 +518,6 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
 
         switch ($dispatcher->getActionName()) {
             case 'welcome':
-            case 'add_rss':
-            case 'add_serie':
-            case 'list_import':
             case 'logout':
 
                 //if the user is not logged in, take them out
@@ -537,7 +525,7 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                     //no lo encontramos pagina de error
                     return $this->dispatcher->forward([
                         "controller" => 'index',
-                        "action" => "route401",
+                        "action" => $this->failedActivationRedirectAction,
                     ]);
                 }
 
@@ -558,18 +546,9 @@ class AuthentificationManager extends \Phalcon\Mvc\Controller
                     //no lo encontramos pagina de error
                     return $this->dispatcher->forward([
                         "controller" => 'index',
-                        "action" => "route401",
+                        "action" => $this->failedActivationRedirectAction,
                     ]);
                 }
-                break;
-
-            case 'addFriend':
-            case 'acceptFriend':
-            case 'removeFriend':
-            case 'cancelFriend':
-            case 'followUser':
-            case 'removeFollower':
-                $this->validateUrlToken();
                 break;
         }
     }

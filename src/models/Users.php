@@ -140,8 +140,7 @@ class Users extends \Phalcon\Mvc\Model
      */
     public function initialize()
     {
-        $this->hasMany('user_id', 'Naruhodo\Models\Users\Config', 'user_id', ['alias' => 'configs']);
-        $this->hasOne('user_id', 'Naruhodo\Models\Sessions\Sessions', 'user_id', ['alias' => 'session']);
+        $this->hasOne('user_id', 'Baka\Auth\Models\Sessions', 'user_id', ['alias' => 'session']);
     }
 
     /**
@@ -251,7 +250,9 @@ class Users extends \Phalcon\Mvc\Model
         $password = ltrim(trim($password));
 
         //load config
-        $config = new \Naruhodo\Models\Config();
+        $config = new \stdClass();
+        $config->login_reset_time = getenv('AUTH_MAX_AUTOLOGIN_TIME');
+        $config->max_login_attempts = getenv('AUTH_MAX_AUTOLOGIN_ATTEMPS');
 
         //first we find the user
         if ($userInfo = self::findFirstByDisplayname($username)) {

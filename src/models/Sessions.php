@@ -21,7 +21,6 @@ namespace Baka\Auth\Models;
 
 use \Baka\Models\Users;
 use \Exception;
-use \Naruhodo\Models\Config;
 use \Phalcon\DI;
 use \Phalcon\Mvc\Model;
 
@@ -73,6 +72,7 @@ class Sessions extends Model
      * @var phpbbSession
      */
     public static $userData = null;
+
     public $config;
 
     /**
@@ -81,7 +81,14 @@ class Sessions extends Model
     public function onConstruct()
     {
         //configuracion general del site
-        $this->config = new Config();
+        $this->config = new \stdClass();
+        $this->config->cookie_name = getenv('AUTH_COOKIE_NAME');
+        $this->config->cookie_path = getenv('AUTH_COOKIE_PATH');
+        $this->config->cookie_domain = getenv('AUTH_COOKIE_DOMAIN');
+        $this->config->cookie_secure = getenv('AUTH_COOKIE_SECURE');
+        $this->config->allow_autologin = getenv('AUTH_ALLOW_AUTOLOGIN');
+        $this->config->session_length = getenv('AUTH_SESSION_LENGHT');
+        $this->config->max_autologin_time = getenv('AUTH_MAX_AUTOLOIGN_TIME');
     }
 
     /**
