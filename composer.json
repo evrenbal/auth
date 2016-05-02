@@ -11,22 +11,26 @@
     "require": {
         "php": ">=5.4",
         "ext-phalcon": ">=2.0.4",
-        "vlucas/phpdotenv": "^2.0"
+        "vlucas/phpdotenv": "^2.0",
+        "phalcon/incubator": "dev-master",
+        "nesbot/carbon": "^1.21"
     },
     "require-dev": {
         "codeception/verify": "*",
-        "vlucas/phpdotenv": "^2.0"
+        "vlucas/phpdotenv": "^2.0",
+        "phalcon/incubator": "dev-master",
+        "nesbot/carbon": "^1.21"
     },
     "autoload": {
         "psr-4": {
             "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models": "src/models"
+            "Baka\\Auth\\Models\\": "src/models/"
         }
     },
      "autoload-dev": {
         "psr-4": {
             "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models": "src/models"
+            "Baka\\Auth\\Models\\": "src/models/"
 
         }
     }   

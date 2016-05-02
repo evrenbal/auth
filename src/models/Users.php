@@ -277,9 +277,9 @@ class Users extends \Phalcon\Mvc\Model
 
                 $admin = (isset($admin)) ? 1 : 0;
 
-                $session = new \Naruhodo\Models\Sessions\Sessions();
+                $session = new \Baka\Auth\Models\Sessions();
 
-                $userSession = $session->session_begin($userInfo->user_id, $userIp, PAGE_INDEX, false, $autologin, $admin);
+                $userSession = $session->session_begin($userInfo->user_id, $userIp, getenv('PAGE_INDEX'), false, $autologin, $admin);
 
                 // Reset login tries
                 $userInfo->lastvisit = date('Y-m-d H:i:s'); //volvemos tu numero de logins a 0 y intentos

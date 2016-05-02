@@ -26,3 +26,7 @@ $di->set('userData', function() {
     return \Baka\Auth\Models\Sessions::start(1, $request->getClientAddress());
 });
 ```
+
+## Migratio
+
+`$ phalcon migration --action=run --migrations=migrations --config=</path/to/config.php>`

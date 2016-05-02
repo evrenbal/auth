@@ -19,7 +19,7 @@
 
 namespace Baka\Auth\Models;
 
-use \Baka\Models\Users;
+use \Baka\Auth\Models\Users;
 use \Exception;
 use \Phalcon\DI;
 use \Phalcon\Mvc\Model;
@@ -110,7 +110,7 @@ class Sessions extends Model
     {
         if (empty(self::$userData)) {
             $session = new self();
-            $pageId = is_null($pageId) ? PAGE_INDEX : $pageId;
+            $pageId = is_null($pageId) ? getenv('PAGE_INDEX') : $pageId;
             self::$userData = $session->session_pagestart($userIp, $pageId);
         }
 
@@ -136,11 +136,11 @@ class Sessions extends Model
         if (isset($_COOKIE[$cookieName . '_sid']) || isset($_COOKIE[$cookieName . '_data'])) {
             $sessionId = isset($_COOKIE[$cookieName . '_sid']) ? $_COOKIE[$cookieName . '_sid'] : '';
             $sessionData = isset($_COOKIE[$cookieName . '_data']) ? @unserialize(stripslashes($_COOKIE[$cookieName . '_data'])) : array();
-            $sessionmethod = SESSION_METHOD_COOKIE;
+            $sessionmethod = getenv('SESSION_METHOD_COOKIE');
         } else {
             $sessionData = array();
             $sessionId = (isset($_GET['sid'])) ? $_GET['sid'] : '';
-            $sessionmethod = SESSION_METHOD_GET;
+            $sessionmethod = getenv('SESSION_METHOD_GET');
         }
 
         //
@@ -168,10 +168,10 @@ class Sessions extends Model
         //
         $userData = array();
 
-        if ($user_id != ANONYMOUS) {
+        if ($user_id != getenv('ANONYMOUS')) {
             if (isset($sessionData['autologinid']) && (string) $sessionData['autologinid'] != '' && $user_id) {
                 $sql = "SELECT u.*
-                    FROM " . USERS_TABLE . " u, " . SESSIONS_KEYS_TABLE . " k
+                    FROM Baka\Auth\Models\Users u, Baka\Auth\Models\SessionKeys k
                     WHERE u.user_id =  :user_id:
                         AND u.user_active = 1
                         AND k.user_id = u.user_id
@@ -219,7 +219,7 @@ class Sessions extends Model
         //if (!sizeof($userData) || !is_array($userData) || !$userData)
         if (!$userIsActive || !is_array($userData) || !$userData) {
             $sessionData['autologinid'] = '';
-            $sessionData['userid'] = $user_id = ANONYMOUS;
+            $sessionData['userid'] = $user_id = getenv('ANONYMOUS');
             $enable_autologin = $login = 0;
 
             $userInfo = Users::getById($user_id, true);
@@ -233,11 +233,11 @@ class Sessions extends Model
         preg_match('/(..)(..)(..)(..)/', $user_ip, $user_ip_parts);
 
         $sql = "SELECT ip, user_id, email
-            FROM " . BANLIST_TABLE . "
+            FROM  Baka\Auth\Models\Banlist
             WHERE ip IN ('" . $user_ip_parts[1] . $user_ip_parts[2] . $user_ip_parts[3] . $user_ip_parts[4] . "', '" . $user_ip_parts[1] . $user_ip_parts[2] . $user_ip_parts[3] . "ff', '" . $user_ip_parts[1] . $user_ip_parts[2] . "ffff', '" . $user_ip_parts[1] . "ffffff')
                 OR user_id = $user_id";
 
-        if ($user_id != ANONYMOUS) {
+        if ($user_id != getenv('ANONYMOUS')) {
             $sql .= " OR email LIKE '" . str_replace("\'", "''", $userInfo->email) . "'
                 OR email LIKE '" . substr(str_replace("\'", "''", $userInfo->email), strpos(str_replace("\'", "''", $userInfo->email), "@")) . "'";
         }
@@ -257,7 +257,7 @@ class Sessions extends Model
 
         /**
          * Create or update the session
-         * @todo we dont need a new session for every anonymous user, use less , right now 27.7.15 90% of the sessions are for that type of users
+         * @todo we dont need a new session for every getenv('ANONYMOUS') user, use less , right now 27.7.15 90% of the sessions are for that type of users
          */
         $session = new self();
         $session->user_id = $user_id;
@@ -278,7 +278,7 @@ class Sessions extends Model
             $session->save();
         }
 
-        if ($user_id != ANONYMOUS) {
+        if ($user_id != getenv('ANONYMOUS')) {
             $last_visit = ($userInfo->session_time > 0) ? $userInfo->session_time : $currentTime;
 
             if (!$admin) {
@@ -331,7 +331,7 @@ class Sessions extends Model
                 $sessionData['autologinid'] = '';
             }
 
-            //$sessionData['autologinid'] = (!$admin) ? (( $enable_autologin && $sessionmethod == SESSION_METHOD_COOKIE ) ? $auto_login_key : '') : $sessionData['autologinid'];
+            //$sessionData['autologinid'] = (!$admin) ? (( $enable_autologin && $sessionmethod == getenv('SESSION_METHOD_COOKIE') ) ? $auto_login_key : '') : $sessionData['autologinid'];
             $sessionData['userid'] = $user_id;
         }
 
@@ -358,7 +358,7 @@ class Sessions extends Model
         }
 
         //is user online?
-        if ($user_id != ANONYMOUS) {
+        if ($user_id != getenv('ANONYMOUS')) {
             $userInfo->loggedIn = true;
         }
 
@@ -385,11 +385,11 @@ class Sessions extends Model
         if (isset($_COOKIE[$cookieName . '_sid']) || isset($_COOKIE[$cookieName . '_data'])) {
             $sessionData = isset($_COOKIE[$cookieName . '_data']) ? @unserialize(stripslashes($_COOKIE[$cookieName . '_data'])) : array();
             $sessionId = isset($_COOKIE[$cookieName . '_sid']) ? $_COOKIE[$cookieName . '_sid'] : '';
-            $sessionmethod = SESSION_METHOD_COOKIE;
+            $sessionmethod = getenv('SESSION_METHOD_COOKIE');
         } else {
             $sessionData = array();
             $sessionId = (isset($_GET['sid'])) ? $_GET['sid'] : '';
-            $sessionmethod = SESSION_METHOD_GET;
+            $sessionmethod = getenv('SESSION_METHOD_GET');
         }
 
         // filter the session id regex
@@ -408,7 +408,7 @@ class Sessions extends Model
             // data in preparation
             //
             $sql = "SELECT user.*, session.*
-                FROM " . SESSIONS_TABLE . " session, " . USERS_TABLE . " user
+                FROM Baka\Auth\Models\Sessions session, Baka\Auth\Models\Users user
                 WHERE session.session_id = :session_id:
                     AND user.user_id = session.user_id";
 
@@ -440,7 +440,7 @@ class Sessions extends Model
                 $ip_check_u = substr($user_ip, 0, 6);
 
                 if ($ip_check_s == $ip_check_u) {
-                    //$SID = ($sessionmethod == SESSION_METHOD_GET || defined('IN_ADMIN')) ? 'sid=' . $sessionId : '';
+                    //$SID = ($sessionmethod == getenv('SESSION_METHOD_GET') || defined('IN_ADMIN')) ? 'sid=' . $sessionId : '';
 
                     //
                     // Only update session DB a minute or so after last update
@@ -460,8 +460,8 @@ class Sessions extends Model
 
                         $session->update();
 
-                        //if it not anonymous
-                        if ($userData->user->user_id != ANONYMOUS) {
+                        //if it not getenv('ANONYMOUS')
+                        if ($userData->user->user_id != getenv('ANONYMOUS')) {
 
                             //update the user info of current session
                             $user = new Users();
@@ -488,8 +488,8 @@ class Sessions extends Model
 
                     $userInfo->session_id = $userData->session->session_id;
 
-                    //if not anonymous user online
-                    if ($userData->user->user_id != ANONYMOUS) {
+                    //if not getenv('ANONYMOUS') user online
+                    if ($userData->user->user_id != getenv('ANONYMOUS')) {
                         $userInfo->loggedIn = true;
                     }
 
@@ -502,7 +502,7 @@ class Sessions extends Model
         // If we reach here then no (valid) session exists. So we'll create a new one,
         // using the cookie user_id if available to pull basic user prefs.
         //
-        $user_id = (isset($sessionData['userid'])) ? intval($sessionData['userid']) : ANONYMOUS;
+        $user_id = (isset($sessionData['userid'])) ? intval($sessionData['userid']) : getenv('ANONYMOUS');
 
         if (!($userData = $this->session_begin($user_id, $user_ip, $thispage_id, true))) {
             throw new \Exception(_('Error while creating session.'));
@@ -511,8 +511,8 @@ class Sessions extends Model
         //son lo mismo -_-
         $userInfo = $userData; //$userInfo->getById($userData->user_id);
 
-        //if not anonymous user online
-        if ($userInfo->user_id != ANONYMOUS) {
+        //if not getenv('ANONYMOUS') user online
+        if ($userInfo->user_id != getenv('ANONYMOUS')) {
             $userInfo->loggedIn = true;
         }
 
@@ -545,8 +545,8 @@ class Sessions extends Model
             //apc_store("session_gc_running", true, 0);
             $cache->set("session_gc_running", true);
 
-            $sql = 'DELETE FROM ' . SESSIONS_TABLE . '
-                        WHERE user_id = ' . ANONYMOUS . '
+            $sql = 'DELETE FROM Baka\Auth\Models\Sessions
+                        WHERE user_id = ' . getenv('ANONYMOUS') . '
                             AND time < ' . (int) (time() - 3600);
 
             $result = $this->getModelsManager()->executeQuery($sql);
@@ -558,7 +558,7 @@ class Sessions extends Model
         //
         // Delete expired sessions
         //
-        $sql = "DELETE FROM " . SESSIONS_TABLE . "
+        $sql = "DELETE FROM  Baka\Auth\Models\Sessions
             WHERE time < :session_time:
                 AND session_id <> :session_id: ";
 
@@ -630,7 +630,7 @@ class Sessions extends Model
         // We expect that message_die will be called after this function,
         // but just in case it isn't, reset $userData to the details for a guest
         //
-        $userData = $userData->getById(ANONYMOUS);
+        $userData = $userData->getById(getenv('ANONYMOUS'));
 
         setcookie($cookieName . '_data', '', $currentTime - 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);
         setcookie($cookieName . '_sid', '', $currentTime - 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);

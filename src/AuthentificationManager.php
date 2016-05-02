@@ -12,7 +12,7 @@ use Phalcon\Validation\Validator\Email as EmailValidator;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\StringLength;
 
-class AuthentificationManager extends \Phalcon\Mvc\Controller
+abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 {
     protected $successLoginRedirect = '/';
     protected $successLoginRedirectNoWelcome = '/user/welcome';
