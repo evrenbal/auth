@@ -21,6 +21,16 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     protected $failedActivationRedirectAction = '404';
 
     /**
+     * Home action
+     */
+    public function homeAction()
+    {
+        $this->tag->setTitle(_('Sign up'));
+
+        $this->persistent->parameters = null;
+    }
+
+    /**
      * User login form
      */
     public function loginAction()
