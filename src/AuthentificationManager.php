@@ -2,8 +2,8 @@
 
 namespace Baka\Auth;
 
-use Auth\Models\UserLinkedSources;
-use Auth\Models\Users;
+use Baka\Auth\Models\UserLinkedSources;
+use Baka\Auth\Models\Users;
 use Phalcon\Events\Event;
 use Phalcon\Mvc\Dispatcher;
 use Phalcon\Validation;
@@ -15,7 +15,8 @@ use Phalcon\Validation\Validator\StringLength;
 abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 {
     protected $successLoginRedirect = '/';
-    protected $successLoginRedirectNoWelcome = '/user/welcome';
+    protected $successLogoutRedirect = '/';
+    protected $successLoginRedirectNoWelcome = '/users/welcome';
     protected $successRegistrationRedirectAction = 'welcome';
     protected $failedRegistrationRedirectAction = 'welcome';
     protected $failedActivationRedirectAction = '404';
@@ -26,6 +27,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     public function homeAction()
     {
         $this->tag->setTitle(_('Sign up'));
+        $this->view->pick("signup");
 
         $this->persistent->parameters = null;
     }
@@ -38,42 +40,46 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
         $this->tag->setTitle(_('Login'));
 
         //if the user submited the form and passes the security check then we go to login
-        if ($this->request->isPost() && $this->security->checkToken()) {
-            $username = $this->request->getPost('username', 'string');
-            $password = $this->request->getPost('password', 'string');
-            $admin = $this->request->getPost('site_baka_admin');
-            $userIp = $this->request->getClientAddress();
-            $remember = 1;
+        if ($this->request->isPost()) {
+            if ($this->security->checkToken()) {
+                $username = $this->request->getPost('username', 'string');
+                $password = $this->request->getPost('password', 'string');
+                $admin = $this->request->getPost('site_baka_admin');
+                $userIp = $this->request->getClientAddress();
+                $remember = 1;
 
-            //Ok let validate user password
-            $validation = new Validation();
-            $validation->add('username', new PresenceOf(['message' => _('The username is required.')]));
-            $validation->add('password', new PresenceOf(['message' => _('The password is required.')]));
+                //Ok let validate user password
+                $validation = new Validation();
+                $validation->add('username', new PresenceOf(['message' => _('The username is required.')]));
+                $validation->add('password', new PresenceOf(['message' => _('The password is required.')]));
 
-            //validate this form for password
-            $messages = $validation->validate($_POST);
-            if (count($messages)) {
-                foreach ($messages as $message) {
-                    $this->flash->error($message);
-                }
-                return;
-            }
-
-            //login the user
-            try
-            {
-                $userData = Users::login($username, $password, $remember, $admin, $userIp);
-
-                //did the user complete the welcome page?
-                if ($this->userData->welcome) {
-                    return $this->response->redirect($this->successLoginRedirect);
-                } else {
-                    return $this->response->redirect($this->userData->getLanguageUrl() . $this->successLoginRedirectNoWelcome);
+                //validate this form for password
+                $messages = $validation->validate($_POST);
+                if (count($messages)) {
+                    foreach ($messages as $message) {
+                        $this->flash->error($message);
+                    }
+                    return;
                 }
 
-            } catch (\Exception $e) {
-                $this->flash->error($e->getMessage());
-                return;
+                //login the user
+                try
+                {
+                    $userData = Users::login($username, $password, $remember, $admin, $userIp);
+
+                    //did the user complete the welcome page?
+                    if ($this->userData->welcome) {
+                        return $this->response->redirect($this->successLoginRedirect);
+                    } else {
+                        return $this->response->redirect($this->userData->getLanguageUrl() . $this->successLoginRedirectNoWelcome);
+                    }
+
+                } catch (\Exception $e) {
+                    $this->flash->error($e->getMessage());
+                    return;
+                }
+            } else {
+                $this->flash->error('Token Error');
             }
         }
     }
@@ -86,8 +92,9 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     public function logoutAction()
     {
         if ($this->userData->isLoggedIn()) {
+
             //validate the user is logingout
-            $this->validateUrlToken(false);
+            //$this->validateUrlToken(false);
             $language = $this->userData->getLanguageUrl();
             $this->userData->logOut();
 
@@ -107,7 +114,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             }
         }
 
-        return $this->response->redirect($language);
+        return $this->response->redirect($this->successLogoutRedirect);
     }
 
     /**
@@ -115,7 +122,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
      */
     public function signupAction()
     {
-
         //si existe ya la session de social connect significa que vienes de una cuenta de connect social
         if ($socialConnect = is_array($this->session->get('socialConnect'))) {
             $userSocial = $this->session->get('socialConnect');
@@ -131,8 +137,8 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
         }
 
         //token_name(token)
-        if ($this->security->checkToken()) {
-            if ($this->request->isPost()) {
+        if ($this->request->isPost()) {
+            if ($this->security->checkToken()) {
                 $user = new Users();
 
                 $user->email = $this->request->getPost('email', 'email');
@@ -203,13 +209,15 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 } else {
                     //create a session with the user activation key , to resent the user email if he didnt get it
                     $this->session->set('userRegistrationKey', $user->user_activation_key);
-                    $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
+                    $activationUrl = $this->config->application->siteUrl . '/' . $this->router->getControllerName() . '/activate/' . $user->user_activation_key;
 
                     //user registration send email
                     $this->sendEmail('signup', $user);
 
-                    return $this->response->redirect('/user/activate/' . $user->user_activation_key);
+                    return $this->response->redirect('/' . $this->router->getControllerName() . '/activate/' . $user->user_activation_key);
                 }
+            } else {
+                $this->flash->error('Token Error');
             }
         }
     }
@@ -399,7 +407,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $userData->update();
 
             $this->flash->success(_('User has been successfully registered and activated.'));
-            $this->flash->notice(_('Please complete the Welcome process to get you started!'));
 
             //login the user and send them to welcome
             $session = new \Baka\Auth\Models\Sessions();
@@ -482,7 +489,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
      */
     public function welcomeAction($section = null)
     {
-
+        $this->flash->notice(_('Please complete the Welcome process to get you started!'));
     }
 
     /**

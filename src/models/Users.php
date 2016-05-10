@@ -254,8 +254,11 @@ class Users extends \Phalcon\Mvc\Model
         $config->login_reset_time = getenv('AUTH_MAX_AUTOLOGIN_TIME');
         $config->max_login_attempts = getenv('AUTH_MAX_AUTOLOGIN_ATTEMPS');
 
+        //if its a email lets by it by email, if not by displayname
+        $userInfo = !filter_var($username, FILTER_VALIDATE_EMAIL) ? self::findFirstByDisplayname($username) : self::findFirstByEmail($username);
+
         //first we find the user
-        if ($userInfo = self::findFirstByDisplayname($username)) {
+        if ($userInfo) {
             // If the last login is more than x minutes ago, then reset the login tries/time
             if ($userInfo->user_last_login_try && $config->login_reset_time && $userInfo->user_last_login_try < (time() - ($config->login_reset_time * 60))) {
                 $userInfo->user_login_tries = 0; //volvemos tu numero de logins a 0 y intentos

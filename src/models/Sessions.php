@@ -348,8 +348,8 @@ class Sessions extends Model
         $cookieExpire = $currentTime + (($this->config->max_autologin_time) ? 86400 * (int) $this->config->max_autologin_time : 31536000);
 
         //le agregmaos el cookie domain
-        setcookie($cookieName . '_data', serialize($sessionData), $currentTime + 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);
-        setcookie($cookieName . '_sid', $sessionId, $cookieExpire, $cookiePath, $cookieDomain, $cookieSecure, 1);
+        setcookie($cookieName . '_data', serialize($sessionData), $currentTime + 31536000, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
+        setcookie($cookieName . '_sid', $sessionId, $cookieExpire, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
 
         // Add the session_key to the userdata array if it is set
         if (isset($sessionData['autologinid']) && !empty($sessionData['autologinid'])) {
@@ -475,8 +475,8 @@ class Sessions extends Model
 
                         //update cookies
                         $cookieExpire = $currentTime + (($this->config->max_autologin_time) ? 86400 * (int) $this->config->max_autologin_time : 31536000);
-                        setcookie($cookieName . '_data', serialize($sessionData), $currentTime + 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);
-                        setcookie($cookieName . '_sid', $sessionId, $cookieExpire, $cookiePath, $cookieDomain, $cookieSecure, 1);
+                        setcookie($cookieName . '_data', serialize($sessionData), $currentTime + 31536000, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
+                        setcookie($cookieName . '_sid', $sessionId, $cookieExpire, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
                     }
 
                     $userInfo = $userInfo->getById($userData->user->user_id);
@@ -532,7 +532,7 @@ class Sessions extends Model
         //we sent the session id to the seassion daemon cleaner
         if (!$daemon) {
             $queue = $this->getDI()->getQueue();
-            $queue->putInTube(SESSION_QUEUE, $sessionId);
+            $queue->putInTube(getenv('SESSION_QUEUE'), $sessionId);
 
             return true;
         }
@@ -632,8 +632,8 @@ class Sessions extends Model
         //
         $userData = $userData->getById(getenv('ANONYMOUS'));
 
-        setcookie($cookieName . '_data', '', $currentTime - 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);
-        setcookie($cookieName . '_sid', '', $currentTime - 31536000, $cookiePath, $cookieDomain, $cookieSecure, 1);
+        setcookie($cookieName . '_data', '', $currentTime - 31536000, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
+        setcookie($cookieName . '_sid', '', $currentTime - 31536000, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
 
         return true;
     }
