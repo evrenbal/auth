@@ -1,4 +1,4 @@
-# baka-Auth
+# Baka-Auth
 
 MC Auth Library to avoid having to redo a user signup flow for apps. 
 
@@ -18,7 +18,7 @@ Add this to your service.php
 *
 * @return Session
 */
-$di->set('userData', function() {
+$di->set('userData', function () {
 
     $session = new \Baka\Auth\Models\Sessions();
     $request = new \Phalcon\Http\Request();
@@ -27,16 +27,19 @@ $di->set('userData', function() {
 });
 ```
 
-## Migratio
+## Generate migration files
 
 `$ phalcon migration --action=run --migrations=migrations --config=</path/to/config.php>`
 
+## Import migration into project
+
+`$phalcon migration --action=run --migrations=vendor/baka/auth/migrations/`
 
 ## ENV
 
 ```
 //AUTH
-AUTH_COOKIE_NAME= 
+AUTH_COOKIE_NAME=
 AUTH_COOKIE_PATH=
 AUTH_COOKIE_DOMAIN=
 AUTH_COOKIE_SECURE=
@@ -44,31 +47,30 @@ AUTH_ALLOW_AUTOLOGIN=
 AUTH_SESSION_LENGHT=
 AUTH_MAX_AUTOLOGIN_TIME=
 AUTH_MAX_AUTOLOGIN_ATTEMPS=
-PAGE_INDEX = 0
-SESSION_METHOD_COOKIE = 100
-SESSION_METHOD_GET = 101
+PAGE_INDEX=0
+SESSION_METHOD_COOKIE=100
+SESSION_METHOD_GET=101
 ANONYMOUS=0
 ```
 
 ## Router
 
 ```
-$router->add('/users', array(
+$router->add('/users', [
     'namespace' => 'Phalcon\\Controllers\\',
     'controller' => 'users',
     'action' => 'home',
-));
+]);
 
-$router->add('/users/sign-up', array(
+$router->add('/users/sign-up', [
     'namespace' => 'Phalcon\\Controllers\\',
     'controller' => 'users',
     'action' => 'signup',
-));
+]);
 
-$router->add('/users/thank-you', array(
+$router->add('/users/thank-you', [
     'namespace' => 'Phalcon\\Controllers\\',
     'controller' => 'users',
     'action' => 'thankyou',
-));
-
+]);
 ```
