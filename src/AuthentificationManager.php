@@ -540,10 +540,8 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 //if the user is not logged in, take them out
                 if (!$this->userData->isLoggedIn()) {
                     //no lo encontramos pagina de error
-                    return $this->dispatcher->forward([
-                        "controller" => 'index',
-                        "action" => $this->failedActivationRedirectAction,
-                    ]);
+                    return $this->response->redirect($this->failedActivationRedirectAction);
+
                 }
 
                 break;
@@ -561,10 +559,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 //if the user is logged in, take them out
                 if ($this->userData->isLoggedIn()) {
                     //no lo encontramos pagina de error
-                    return $this->dispatcher->forward([
-                        "controller" => 'index',
-                        "action" => $this->failedActivationRedirectAction,
-                    ]);
+                    return $this->response->redirect($this->successLoginRedirect);
                 }
                 break;
         }
