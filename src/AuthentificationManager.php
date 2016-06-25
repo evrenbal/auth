@@ -259,8 +259,8 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                 $this->flash->success(_('Please check your email inbox to complete the password recovery.'));
 
-                $recoveryLink = $this->config->application->siteUrl . '/user/reset/' . $recoverUser->user_activation_forgot;
-                $recoveryLink = '<a href="' . $recoveryLink . '>' . _('here') . '</a>';
+                $recoveryLink = $this->config->application->siteUrl . '/users/reset/' . $recoverUser->user_activation_forgot;
+                $recoveryLink = '<a href="' . $recoveryLink . '">' . _('here') . '</a>';
 
                 $this->sendEmail('recover', $recoverUser);
 
@@ -326,12 +326,13 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                     $userData->cleanSession();
 
                     $this->view->setVar('changedPassword', true);
-                    $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
+                    $activationUrl = $this->config->application->siteUrl . '/users/activate/' . $user->user_activation_key;
 
-                    $this->sendEmail('reset', $user);
+                    $this->sendEmail('reset', $userData, $activationUrl);
 
+                    $this->flash->success(_('Congratulations! You\'ve successfully changed your password.'));
                     return;
-                    //$this->flash->success(_('Congratulations! You\'ve successfully changed your password.'));
+
                 } else {
                     foreach ($userData->getMessages() as $message) {
                         return $this->flash->error($message);
@@ -371,7 +372,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             //$token =  $this->session->get('userRegistrationKey');
             if ($user) // = Users::findFirstByUser_activation_key($token))
             {
-                $activationUrl = $this->config->application->siteUrl . '/user/activate/' . $user->user_activation_key;
+                $activationUrl = $this->config->application->siteUrl . '/users/activate/' . $user->user_activation_key;
 
                 //user registration send email
                 $this->flash->success(_('Please check your email inbox to complete the password recovery.'));
@@ -471,7 +472,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $this->session->remove('socialConnect');
             $this->flash->error(sprintf(_('There was a communication error with %s. Please try again later or connect with another service.'), ucfirst($site)));
 
-            return $this->response->redirect('/user/sign-up');
+            return $this->response->redirect('/users/sign-up');
             //no lo encontramos pagina de error
             /* return $this->dispatcher->forward([
         'controller' => 'index',
@@ -498,7 +499,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
      * @param String $emailAction
      * @param Users  $user
      */
-    protected function sendEmail($emailAction, Users $user)
+    protected function sendEmail($emailAction, Users $user, $msg = null)
     {
         /* $email = [
         'subject' => 'Signup complete',

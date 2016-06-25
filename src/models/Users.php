@@ -574,9 +574,9 @@ class Users extends \Phalcon\Mvc\Model
      */
     public function cleanSession()
     {
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM " . SESSIONS_TABLE . " WHERE user_id = '{$this->user_id}'", $this->getDI());
+        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM \Baka\Auth\Models\Sessions WHERE user_id = '{$this->user_id}'", $this->getDI());
         $query->execute();
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM " . SESSIONS_KEYS_TABLE . " WHERE user_id = '{$this->user_id}'", $this->getDI());
+        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM  \Baka\Auth\Models\SessionKeys WHERE user_id = '{$this->user_id}'", $this->getDI());
         $query->execute();
 
         return true;
