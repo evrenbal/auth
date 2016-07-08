@@ -316,8 +316,10 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
             // Check that they are the same
             if ($newPassword == $verifyPassword) {
+
                 // Has the password and set it
                 $userData->user_activation_forgot = '';
+                $userData->user_active = 1;
                 $userData->password = Users::passwordHash($newPassword);
 
                 // Update
