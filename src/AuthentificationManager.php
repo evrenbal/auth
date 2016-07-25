@@ -414,7 +414,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             //login the user and send them to welcome
             $session = new \Baka\Auth\Models\Sessions();
             $userIp = $this->request->getClientAddress();
-            $session->session_begin($userData->user_id, $userIp, PAGE_INDEX, false, true, false);
+            $session->session_begin($userData->user_id, $userIp, PAGE_INDEX, false, true, 0);
 
             //now login and go to welcome page
             return $this->response->redirect($this->successLoginRedirectNoWelcome);
