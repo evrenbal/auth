@@ -285,7 +285,7 @@ class Sessions extends Model
                 //update user info
                 $userInfo->session_time = $currentTime;
                 $userInfo->session_page = $page_id;
-                $userInfo->lastvisit = $last_visit;
+                $userInfo->lastvisit = date('Y-m-d H:i:s', $last_visit);
                 $userInfo->update();
             }
 
