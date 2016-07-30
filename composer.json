@@ -18,7 +18,7 @@
     "require-dev": {
         "codeception/verify": "*",
         "vlucas/phpdotenv": "^2.0",
-        "phalcon/incubator": "dev-master",
+        "phalcon/incubator": "2.0.13",
         "nesbot/carbon": "^1.21"
     },
     "autoload": {
