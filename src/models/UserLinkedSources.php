@@ -3,7 +3,8 @@
 namespace Baka\Models;
 
 use Baka\Models\Sources;
-use Phalcon\Mvc\Model\Validator\Uniqueness;
+use Phalcon\Validation;
+use Phalcon\Validation\Validator\Uniqueness;
 
 class UserLinkedSources extends \Phalcon\Mvc\Model
 {
@@ -44,19 +45,16 @@ class UserLinkedSources extends \Phalcon\Mvc\Model
      * Validations and business logic
      */
     public function validation()
-    {
-
-        //valores unicos
-        $this->validate(new Uniqueness(
-            array(
+    {   
+        $validator = new Validation();
+        $validator->add(
+            'user_id',
+            new Uniqueness([
                 'field' => ['user_id', 'source_user_id'],
                 'message' => _('You have already associated this account.'),
-            )
-        ));
-
-        if ($this->validationHasFailed() == true) {
-            return false;
-        }
+            ])
+        );
+       return $this->validate($validator);
     }
 
     /**
