@@ -2,10 +2,11 @@
 
 namespace Baka\Auth\Models;
 
-use Phalcon\Mvc\Model\Validator\Email;
-use Phalcon\Mvc\Model\Validator\PresenceOf;
-use Phalcon\Mvc\Model\Validator\Regex;
-use Phalcon\Mvc\Model\Validator\Uniqueness;
+use Phalcon\Validation;
+use Phalcon\Validation\Validator\Email;
+use Phalcon\Validation\Validator\PresenceOf;
+use Phalcon\Validation\Validator\Regex;
+use Phalcon\Validation\Validator\Uniqueness;
 
 class Users extends \Phalcon\Mvc\Model
 {
@@ -148,21 +149,25 @@ class Users extends \Phalcon\Mvc\Model
      */
     public function validation()
     {
-        $this->validate(
+        $validator = new Validation();
+        $validator->add(
+            'email',
             new Email([
                 'field' => 'email',
                 'required' => true,
             ])
         );
 
-        $this->validate(
+        $validator->add(
+            'displayname',
             new PresenceOf([
                 'field' => 'displayname',
                 'required' => true,
             ])
         );
 
-        $this->validate(
+        $validator->add(
+            'displayname',
             new Regex([
                 'field' => 'displayname',
                 'message' => _('Please use alphanumerics only.'),
@@ -171,21 +176,23 @@ class Users extends \Phalcon\Mvc\Model
         );
 
         // Unique values
-        $this->validate(
+        $validator->add(
+            'email',
             new Uniqueness([
                 'field' => 'email',
                 'message' => _('This email already has an account.'),
             ])
         );
 
-        $this->validate(
+        $validator->add(
+            'displayname',
             new Uniqueness([
                 'field' => 'displayname',
                 'message' => _('The username is already taken.'),
             ])
         );
 
-        return !$this->validationHasFailed();
+        return $this->validate($validator);
     }
 
     /**
@@ -221,7 +228,6 @@ class Users extends \Phalcon\Mvc\Model
         } else {
             throw new \Exception(_('The specified user does not exist in our database.'));
         }
-
     }
 
     /**
@@ -347,7 +353,6 @@ class Users extends \Phalcon\Mvc\Model
         $this->user_activation_key = $this->generateActivationKey(); //sha1(mt_rand(10000,99999).time().$this->email);  // sha1($this->displayname.time()."naruho.do_^^");
 
         if ($this->save()) {
-
             return true;
         }
 
@@ -646,7 +651,6 @@ class Users extends \Phalcon\Mvc\Model
             } else {
                 $lang = null;
             }
-
         }
 
         return $lang;
@@ -679,5 +683,4 @@ class Users extends \Phalcon\Mvc\Model
 
         return false;
     }
-
 }
