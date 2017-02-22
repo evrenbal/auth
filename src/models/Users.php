@@ -2,17 +2,19 @@
 
 namespace Baka\Auth\Models;
 
+use Baka\Database\Model;
 use Phalcon\Validation;
 use Phalcon\Validation\Validator\Email;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\Regex;
 use Phalcon\Validation\Validator\Uniqueness;
 
-class Users extends \Phalcon\Mvc\Model
+class Users extends Model
 {
     /**
      * @var integer
      */
+    public $id;
     public $user_id;
 
     /**
@@ -141,7 +143,7 @@ class Users extends \Phalcon\Mvc\Model
      */
     public function initialize()
     {
-        $this->hasOne('user_id', 'Baka\Auth\Models\Sessions', 'user_id', ['alias' => 'session']);
+        $this->hasOne('id', 'Baka\Auth\Models\Sessions', 'user_id', ['alias' => 'session']);
     }
 
     /**
@@ -200,9 +202,9 @@ class Users extends \Phalcon\Mvc\Model
      *
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
-        return $this->user_id;
+        return $this->id;
     }
 
     /**
@@ -223,7 +225,7 @@ class Users extends \Phalcon\Mvc\Model
             $options = ['cache' => ['lifetime' => 3600, 'key' => $key]];
         }
 
-        if ($userData = Users::findFirstByUser_id($userId, $options)) {
+        if ($userData = Users::findFirstById($userId, $options)) {
             return $userData;
         } else {
             throw new \Exception(_('The specified user does not exist in our database.'));
@@ -288,7 +290,7 @@ class Users extends \Phalcon\Mvc\Model
 
                 $session = new \Baka\Auth\Models\Sessions();
 
-                $userSession = $session->session_begin($userInfo->user_id, $userIp, getenv('PAGE_INDEX'), false, $autologin, $admin);
+                $userSession = $session->begin($userInfo->getId(), $userIp, getenv('PAGE_INDEX'), false, $autologin, $admin);
 
                 // Reset login tries
                 $userInfo->lastvisit = date('Y-m-d H:i:s'); //volvemos tu numero de logins a 0 y intentos
@@ -305,13 +307,15 @@ class Users extends \Phalcon\Mvc\Model
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
             elseif ($userInfo->user_active) {
                 // Save login tries and last login
-                if ($userInfo->user_id != ANONYMOUS) {
+                if ($userInfo->getId() != ANONYMOUS) {
                     $userInfo->user_login_tries += 1;
                     $userInfo->user_last_login_try = time();
                     $userInfo->update();
                 }
 
                 throw new \Exception(_('Wrong password, please try again.'));
+            } elseif ($userInfo->isBanned()) {
+                throw new \Exception(_('User has not been banned, please check your email for the activation link.'));
             } else {
                 throw new \Exception(_('User has not been activated, please check your email for the activation link.'));
             }
@@ -338,6 +342,7 @@ class Users extends \Phalcon\Mvc\Model
         $this->timezone = "America/New_York";
         $this->user_level = 3;
         $this->user_active = 0;
+        $this->banned = 'N';
         $this->profile_header = ' ';
         $this->user_login_tries = 0;
         $this->user_last_login_try = 0;
@@ -567,7 +572,7 @@ class Users extends \Phalcon\Mvc\Model
     public function logOut()
     {
         $session = new \Baka\Auth\Models\Sessions();
-        $session->session_end($this);
+        $session->end($this);
 
         return true;
     }
@@ -579,9 +584,9 @@ class Users extends \Phalcon\Mvc\Model
      */
     public function cleanSession()
     {
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM \Baka\Auth\Models\Sessions WHERE user_id = '{$this->user_id}'", $this->getDI());
+        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM \Baka\Auth\Models\Sessions WHERE user_id = '{$this->getId()}'", $this->getDI());
         $query->execute();
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM  \Baka\Auth\Models\SessionKeys WHERE user_id = '{$this->user_id}'", $this->getDI());
+        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM  \Baka\Auth\Models\SessionKeys WHERE user_id = '{$this->getId()}'", $this->getDI());
         $query->execute();
 
         return true;
@@ -678,6 +683,20 @@ class Users extends \Phalcon\Mvc\Model
     public function usingSpanish()
     {
         if (strtolower($this->getLanguage()) == 'es_es') {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if a user is banned
+     *
+     * @return bool
+     */
+    public function isBanned(): bool
+    {
+        if ($this->banned == 'Y') {
             return true;
         }
 

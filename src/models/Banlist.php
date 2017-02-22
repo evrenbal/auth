@@ -2,12 +2,14 @@
 
 namespace Baka\Auth\Models;
 
-class Banlist extends \Phalcon\Mvc\Model
+use Baka\Database\Model;
+
+class Banlist extends Model
 {
     /**
      * @var integer
      */
-    public $user_id;
+    public $users_id;
 
     /**
      * @var string

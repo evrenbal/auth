@@ -2,7 +2,9 @@
 
 namespace Baka\Auth\Models;
 
-class SessionKeys extends \Phalcon\Mvc\Model
+use Baka\Database\Model;
+
+class SessionKeys extends Model
 {
     /**
      * @var string
@@ -12,7 +14,7 @@ class SessionKeys extends \Phalcon\Mvc\Model
     /**
      * @var integer
      */
-    public $user_id;
+    public $users_id;
 
     /**
      * @var string

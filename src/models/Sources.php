@@ -2,7 +2,9 @@
 
 namespace Baka\Models;
 
-class Sources extends \Phalcon\Mvc\Model
+use Baka\Database\Model;
+
+class Sources extends Model
 {
     /**
      * @var integer

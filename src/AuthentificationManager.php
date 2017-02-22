@@ -54,7 +54,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 $validation->add('password', new PresenceOf(['message' => _('The password is required.')]));
 
                 //validate this form for password
-                $messages = $validation->validate($_POST);
+                $messages = $validation->validate($this->request->getPost());
                 if (count($messages)) {
                     foreach ($messages as $message) {
                         $this->flash->error($message);
@@ -159,7 +159,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 );
 
                 //validate this form for password
-                $messages = $validation->validate($_POST);
+                $messages = $validation->validate($this->request->getPost());
                 if (count($messages)) {
                     foreach ($messages as $message) {
                         $this->flash->error($message);
@@ -237,7 +237,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $validation->add('email', new PresenceOf(['message' => _('The email is required.')]));
             $validation->add('email', new EmailValidator(['message' => _('The email is invalid.')]));
 
-            $messages = $validation->validate($_POST);
+            $messages = $validation->validate($this->request->getPost());
             if (count($messages)) {
                 foreach ($messages as $message) {
                     $this->flash->error($message);
@@ -305,7 +305,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             )));
 
             //validate this form for password
-            $messages = $validation->validate($_POST);
+            $messages = $validation->validate($this->request->getPost());
             if (count($messages)) {
                 foreach ($messages as $message) {
                     $this->flash->error($message);
