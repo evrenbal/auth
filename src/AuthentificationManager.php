@@ -4,6 +4,7 @@ namespace Baka\Auth;
 
 use Baka\Auth\Models\UserLinkedSources;
 use Baka\Auth\Models\Users;
+use Exception;
 use Phalcon\Events\Event;
 use Phalcon\Mvc\Dispatcher;
 use Phalcon\Validation;
