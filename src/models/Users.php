@@ -366,7 +366,7 @@ class Users extends Model
         $this->user_activation_key = $this->generateActivationKey(); //sha1(mt_rand(10000,99999).time().$this->email);  // sha1($this->displayname.time()."naruho.do_^^");
 
         if (!$this->save()) {
-            throw new Exception(current($this->getMessages));
+            throw new Exception(current($this->getMessages()));
         }
 
         //fallo el registro
