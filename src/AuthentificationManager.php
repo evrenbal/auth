@@ -178,11 +178,19 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 $user->language = $this->userData->usingSpanish() ? 'ES' : 'EN';
 
                 //user registration
-                if (!$user->signup()) {
-                    //messages
-                    foreach ($user->getMessages() as $message) {
-                        $this->flash->error($message);
+                try {
+
+                    $user->signup();
+
+                    //si es social connect lo registramos con su red social
+                    if ($socialConnect) {
+                        $UserLinkedSources = new UserLinkedSources();
+                        $UserLinkedSources->associateAccount($user, $userProfile, $userSocial['site']);
                     }
+
+                } catch (Exception $e) {
+
+                    $this->flash->error($e->getMessage());
 
                     //por alguna razon el social connect jode la shit -_-
                     $this->view->setVar('userProfile', $user);
@@ -192,14 +200,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                         'action' => $this->failedRegistrationRedirectAction,
                     ]);
                 }
-
-                //si es social connect lo registramos con su red social
-                if ($socialConnect) {
-                    $UserLinkedSources = new UserLinkedSources();
-                    $UserLinkedSources->associateAccount($user, $userProfile, $userSocial['site']);
-                }
-
-                //user email
 
                 //page confirmation
                 if ($this->userData->isLoggedIn()) {

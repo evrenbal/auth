@@ -357,12 +357,12 @@ class Users extends Model
         //$crypt = new Phalcon\Crypt();
         $this->user_activation_key = $this->generateActivationKey(); //sha1(mt_rand(10000,99999).time().$this->email);  // sha1($this->displayname.time()."naruho.do_^^");
 
-        if ($this->save()) {
-            return true;
+        if (!$this->save()) {
+            throw new Exception(current($this->getMessages));
         }
 
         //fallo el registro
-        return false;
+        return $this;
     }
 
     /**
