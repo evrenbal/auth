@@ -3,6 +3,7 @@
 namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
+use Exception;
 use Phalcon\Validation;
 use Phalcon\Validation\Validator\Email;
 use Phalcon\Validation\Validator\PresenceOf;
