@@ -171,9 +171,9 @@ class Sessions extends Model
             if (isset($sessionData['autologinid']) && (string) $sessionData['autologinid'] != '' && $users_id) {
                 $sql = "SELECT u.*
                     FROM Baka\Auth\Models\Users u, Baka\Auth\Models\SessionKeys k
-                    WHERE u.users_id =  :users_id:
+                    WHERE u.id =  :users_id:
                         AND u.user_active = 1
-                        AND k.users_id = u.users_id
+                        AND k.users_id = u.id
                         AND k.session_id = :session_id: ";
 
                 $sessionId = $sessionData['autologinid'];
@@ -409,7 +409,7 @@ class Sessions extends Model
             $sql = "SELECT user.*, session.*
                 FROM Baka\Auth\Models\Sessions session, Baka\Auth\Models\Users user
                 WHERE session.session_id = :session_id:
-                    AND user.users_id = session.users_id";
+                    AND user.id = session.users_id";
 
             $result = $this->getModelsManager()->createQuery($sql);
             $result = $result->execute([
