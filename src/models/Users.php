@@ -134,6 +134,8 @@ class Users extends Model
 
     public $banned;
 
+    public $user_last_login_try;
+
     /**
      *
      */
