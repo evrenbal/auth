@@ -1,6 +1,6 @@
 <?php
 
-namespace Baka\Models;
+namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
 

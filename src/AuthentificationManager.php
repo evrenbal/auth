@@ -364,7 +364,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
             //login the user , so we just create the user session base on the user object
             $session = new \Auth\Models\Sessions();
-            $userSession = $session->session_begin($user->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
+            $userSession = $session->begin($user->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
 
             return $this->response->redirect($this->successLoginRedirectNoWelcome);
         }
@@ -415,7 +415,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             //login the user and send them to welcome
             $session = new \Baka\Auth\Models\Sessions();
             $userIp = $this->request->getClientAddress();
-            $session->session_begin($userData->getId(), $userIp, PAGE_INDEX, false, true, 0);
+            $session->begin($userData->getId(), $userIp, getenv('PAGE_INDEX'), false, true, 0);
 
             //now login and go to welcome page
             return $this->response->redirect($this->successLoginRedirectNoWelcome);
