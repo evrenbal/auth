@@ -333,8 +333,15 @@ class Users extends Model
     {
         //print_r($this); die();
         $this->sex = 'U';
-        $this->firstname = ' ';
-        $this->lastname = ' ';
+
+        if (empty($this->firstname)) {
+            $this->firstname = ' ';
+        }
+
+        if (empty($this->lastname)) {
+            $this->lastname = ' ';
+        }
+
         $this->dob = date('Y-m-d');
         $this->lastvisit = date('Y-m-d H:i:s');
         $this->registered = date('Y-m-d H:i:s');
@@ -610,6 +617,19 @@ class Users extends Model
         foreach ($userConfiguration as $value) {
             $config[$value['name']] = $value['value'];
         }
+
+        return $config;
+    }
+
+    /**
+     * get the obj of the current user config
+     *
+     * @return UserConfig
+     */
+    public function config(): UserConfig
+    {
+        $config = new UserConfig();
+        $config->users_id = $this->getId();
 
         return $config;
     }
