@@ -3,6 +3,7 @@
 namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
+use Exception;
 
 class UserConfig extends Model
 {
@@ -49,7 +50,6 @@ class UserConfig extends Model
      */
     public function initialize()
     {
-
     }
 
     /**
@@ -99,6 +99,7 @@ class UserConfig extends Model
      *
      * @param string $key
      * @param string $value
+     * @return bool
      */
     public function delete(string $key): bool
     {
@@ -144,5 +145,4 @@ class UserConfig extends Model
     {
         return parent::findFirst($parameters);
     }
-
 }

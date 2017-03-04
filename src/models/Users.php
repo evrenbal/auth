@@ -13,7 +13,7 @@ use Phalcon\Validation\Validator\Uniqueness;
 class Users extends Model
 {
     /**
-     * @var integer
+     * @var int
      */
     public $id;
     public $user_id;
