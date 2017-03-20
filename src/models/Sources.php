@@ -46,7 +46,7 @@ class Sources extends Model
      *
      * @return int
      */
-    public function getId()
+    public function getId() : int
     {
         return $this->source_id;
     }
