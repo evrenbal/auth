@@ -64,8 +64,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 }
 
                 //login the user
-                try
-                {
+                try {
                     $userData = Users::login($username, $password, $remember, $admin, $userIp);
 
                     //did the user complete the welcome page?
@@ -74,7 +73,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                     } else {
                         return $this->response->redirect($this->userData->getLanguageUrl() . $this->successLoginRedirectNoWelcome);
                     }
-
                 } catch (\Exception $e) {
                     $this->flash->error($e->getMessage());
                     return;
@@ -99,8 +97,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $language = $this->userData->getLanguageUrl();
             $this->userData->logOut();
 
-            try
-            {
+            try {
                 /**
                  * for now the logout of our social connect wont work, cause they havent finish the shit
                  * so let delete all the sessions
@@ -133,8 +130,17 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $UserLinkedSources = new UserLinkedSources();
             $UserLinkedSources->existSocialProfile($userProfile, $userSocial['site']);
 
+            //reset session
+            $this->session->set('socialConnect', ['site' => $userSocial['site'], 'enable' => true]);
+
             $this->view->setVar('userProfile', $userProfile);
             $this->view->setVar('socialConnect', true);
+            $this->tag->setDefaults([
+                'first_name' => $userProfile->firstName ?? null,
+                'last_name' => $userProfile->lastName ?? null,
+                'email' => $userProfile->email ?? null,
+                'socialSite' => $userProfile->email ?? null,
+            ]);
         }
 
         //token_name(token)
@@ -180,7 +186,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                 //user registration
                 try {
-
                     $user->signup();
 
                     //si es social connect lo registramos con su red social
@@ -188,9 +193,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                         $UserLinkedSources = new UserLinkedSources();
                         $UserLinkedSources->associateAccount($user, $userProfile, $userSocial['site']);
                     }
-
                 } catch (Exception $e) {
-
                     $this->flash->error($e->getMessage());
 
                     //por alguna razon el social connect jode la shit -_-
@@ -335,12 +338,10 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                     $this->flash->success(_('Congratulations! You\'ve successfully changed your password.'));
                     return;
-
                 } else {
                     foreach ($userData->getMessages() as $message) {
                         return $this->flash->error($message);
                     }
-
                 }
             } else {
                 return $this->flash->error(_('Passwords do not match.'));
@@ -373,8 +374,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
         if ($this->request->isPost() && $this->security->checkToken()) {
             //user registration send email
             //$token =  $this->session->get('userRegistrationKey');
-            if ($user) // = Users::findFirstByUser_activation_key($token))
-            {
+            if ($user) { // = Users::findFirstByUser_activation_key($token))
                 $activationUrl = $this->config->application->siteUrl . '/users/activate/' . $user->user_activation_key;
 
                 //user registration send email
@@ -419,7 +419,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
             //now login and go to welcome page
             return $this->response->redirect($this->successLoginRedirectNoWelcome);
-
         } elseif ($userData->isActive()) {
             //wtf? are you doing here and still with an activation key?
             $userData->user_activation_key = '';
@@ -443,6 +442,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     public function socialAction($site = null)
     {
         try {
+            $site = ucfirst($site);
             // request user profile
             $userProfile = Users::getSocialProfile($site);
 
@@ -515,19 +515,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     }
 
     /**
-     * social connect callback page
-     * @return void
-     */
-    public function social_authAction()
-    {
-        //$config = dirname(dirname( __FILE__ )) . "/config/social_config.php";
-        $hybridauth = new \Hybridauth\Hybridauth($this->config->social_config->toArray());
-
-        $endpoint = new \Hybridauth\Endpoint();
-        $endpoint->process();
-    }
-
-    /**
      * Framework function that executes befor the route, to check if the user is looged in or not, on the especify sections
      *
      * @param Event $event
@@ -545,7 +532,6 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
                 if (!$this->userData->isLoggedIn()) {
                     //no lo encontramos pagina de error
                     return $this->response->redirect($this->failedActivationRedirectAction);
-
                 }
 
                 break;

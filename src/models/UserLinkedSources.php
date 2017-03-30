@@ -1,13 +1,12 @@
 <?php
 
-namespace Baka\Models;
+namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
-use Baka\Models\Sources;
 use Phalcon\Validation;
 use Phalcon\Validation\Validator\Uniqueness;
 
-class UserLinkedSources extends \Model
+class UserLinkedSources extends Model
 {
 
     /**
@@ -98,15 +97,15 @@ class UserLinkedSources extends \Model
      *
      * @return boolean
      */
-    public function existSocialProfile(\Hybridauth\Entity\Profile $socialProfile, $socialNetwork)
+    public function existSocialProfile(\Hybridauth\User\Profile $socialProfile, $socialNetwork)
     {
         //si existe el source que nos esta pidiendo el usuario
-        if ($source = Sources::findFirst(['title = :title:', 'bind' => ['title' => $socialNetwork]])) {
+        if ($source = Sources::findFirst(['title = :title:', 'bind' => ['title' => strtolower($socialNetwork)]])) {
 
             //verificamos que no tenga la cuenta ya relacionada con ese social network
             $bind = [
                 'source_id' => $source->source_id,
-                'source_users_id' => $socialProfile->getIdentifier(),
+                'source_users_id' => $socialProfile->identifier,
             ];
 
             //si no tienes una cuenta ya registrada con social network y no estas registrado con este correo
@@ -164,5 +163,4 @@ class UserLinkedSources extends \Model
             'source_users_id_text' => 'source_users_id_text',
         );
     }
-
 }

@@ -1,6 +1,6 @@
 # Baka-Auth
 
-MC Auth Library to avoid having to redo a user signup flow for apps. 
+MC Auth Library to avoid having to redo a user signup flow for apps.
 
 ## Testing
 
@@ -73,4 +73,36 @@ $router->add('/users/thank-you', [
     'controller' => 'users',
     'action' => 'thankyou',
 ]);
+```
+
+## Social logins
+"hybridauth/hybridauth": "dev-3.0.0-Remake",
+
+```
+<?php
+'social_config' => [
+    // required
+    "callback" => getenv('SOCIAL_CONNECT_URL'),
+    // required
+    "providers" => [
+        "Facebook" => [
+            "enabled" => true,
+            "callback" => getenv('SOCIAL_CONNECT_URL').'/Facebook',
+            "keys" => ["id" => getenv('FB_ID'), "secret" => getenv('FB_SECRET')], //production
+        ]
+    ],
+],
+```
+
+And configure the links and callback link (SOCIAL_CONNECT_URL) to
+http://site.com/users/social/{site}
+Example:
+http://site.com/users/social/Facebook
+
+You need to add this to your registration process to idenfity social login
+
+```
+{% if socialConnect %}
+    <input type="hidden" name="socialConnect" value="1">
+{% endif %}
 ```
