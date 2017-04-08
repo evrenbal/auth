@@ -136,6 +136,8 @@ class Users extends Model
 
     public $user_last_login_try;
 
+    public $user_level;
+
     /**
      *
      */
