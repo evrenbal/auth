@@ -65,18 +65,18 @@ class UserLinkedSources extends Model
      * @param string $socialNetwork
      * @return Users
      */
-    public function associateAccount(Users $user, \Hybridauth\Entity\Profile $socialProfile, $socialNetwork)
+    public function associateAccount(Users $user, \Hybridauth\User\Profile $socialProfile, $socialNetwork)
     {
 
         //si no esta asociada tu uenta
         if (!$this->existSocialProfile($socialProfile, $socialNetwork)) {
-            $source = Sources::findFirst(['title = :title:', 'bind' => ['title' => $socialNetwork]]);
+            $source = Sources::findFirst(['title = :title:', 'bind' => ['title' => strtolower($socialNetwork)]]);
 
             $userLinkedSources = new self();
-            $userLinkedSources->users_id = $user->users_id;
+            $userLinkedSources->users_id = $user->getId();
             $userLinkedSources->source_id = $source->source_id;
-            $userLinkedSources->source_users_id = $socialProfile->getIdentifier();
-            $userLinkedSources->source_username = $socialProfile->getDisplayName();
+            $userLinkedSources->source_users_id = $socialProfile->identifier;
+            $userLinkedSources->source_username = $socialProfile->identifier;
 
             //since the user is registration via a social network and it was sucessful we need to activate its account
             if (!$user->user_active) {
@@ -84,7 +84,11 @@ class UserLinkedSources extends Model
                 $user->update();
             }
 
-            return $userLinkedSources->save();
+            if (!$userLinkedSources->save()) {
+                throw new \Exception($userLinkedSources->getMessages()[0]);
+            }
+
+            return true;
         }
 
         return false;
@@ -115,8 +119,8 @@ class UserLinkedSources extends Model
                 $remember = 1;
 
                 //login the user , so we just create the user session base on the user object
-                $session = new \Naruhodo\Models\Sessions\Sessions();
-                $userSession = $session->session_begin($userSocialLinked->users->users_id, $userIp, PAGE_INDEX, false, $remember, $admin);
+                $session = new \Baka\Auth\Models\Sessions();
+                $userSession = $session->begin($userSocialLinked->users->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
 
                 //you are logged in
                 return true;
@@ -148,19 +152,5 @@ class UserLinkedSources extends Model
         }
 
         return false;
-    }
-
-    /**
-     * Independent Column Mapping.
-     */
-    public function columnMap()
-    {
-        return array(
-            'users_id' => 'users_id',
-            'source_id' => 'source_id',
-            'source_users_id' => 'source_users_id',
-            'source_username' => 'source_username',
-            'source_users_id_text' => 'source_users_id_text',
-        );
     }
 }

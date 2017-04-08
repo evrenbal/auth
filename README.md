@@ -76,7 +76,8 @@ $router->add('/users/thank-you', [
 ```
 
 ## Social logins
-"hybridauth/hybridauth": "dev-3.0.0-Remake",
+
+``"hybridauth/hybridauth": "dev-3.0.0-Remake",``
 
 ```
 <?php

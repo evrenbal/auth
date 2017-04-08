@@ -22,6 +22,20 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     protected $failedRegistrationRedirectAction = 'welcome';
     protected $failedActivationRedirectAction = '404';
 
+    protected $userLinkedSourcesModel;
+    protected $userModel;
+
+    /**
+     * Setup for this controller
+     *
+     * @return void
+     */
+    public function initialize()
+    {
+        $this->userLinkedSourcesModel = new UserLinkedSources();
+        $this->userModel = new Users();
+    }
+
     /**
      * Home action
      */
@@ -127,20 +141,11 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $userProfile = Users::getSocialProfile($userSocial['site']);
 
             //si esta cuenta ya esta linked te logeamos
-            $UserLinkedSources = new UserLinkedSources();
+            $UserLinkedSources = $this->userLinkedSourcesModel;
             $UserLinkedSources->existSocialProfile($userProfile, $userSocial['site']);
-
-            //reset session
-            $this->session->set('socialConnect', ['site' => $userSocial['site'], 'enable' => true]);
 
             $this->view->setVar('userProfile', $userProfile);
             $this->view->setVar('socialConnect', true);
-            $this->tag->setDefaults([
-                'first_name' => $userProfile->firstName ?? null,
-                'last_name' => $userProfile->lastName ?? null,
-                'email' => $userProfile->email ?? null,
-                'socialSite' => $userProfile->email ?? null,
-            ]);
         }
 
         //token_name(token)
@@ -190,7 +195,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
                     //si es social connect lo registramos con su red social
                     if ($socialConnect) {
-                        $UserLinkedSources = new UserLinkedSources();
+                        $UserLinkedSources = $this->userLinkedSourcesModel;
                         $UserLinkedSources->associateAccount($user, $userProfile, $userSocial['site']);
                     }
                 } catch (Exception $e) {
@@ -364,7 +369,7 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
             $remember = 1;
 
             //login the user , so we just create the user session base on the user object
-            $session = new \Auth\Models\Sessions();
+            $session = new \Baka\Auth\Models\Sessions();
             $userSession = $session->begin($user->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
 
             return $this->response->redirect($this->successLoginRedirectNoWelcome);
@@ -443,12 +448,17 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
     {
         try {
             $site = ucfirst($site);
+
+            //for some strange reason we need to start the session before getting the
+            //profile from the lib , if not we loose all session -_-'s
+            $this->session->set('initialize_sesion_for_this', '1');
+
             // request user profile
             $userProfile = Users::getSocialProfile($site);
 
             if (is_object($userProfile)) {
                 //si esta cuenta ya esta linked te logeamos
-                $UserLinkedSources = new \Baka\Auth\Models\UserLinkedSources();
+                $UserLinkedSources = $this->userLinkedSourcesModel;
 
                 //if you already are a existing social profile , if not we send you to signup
                 if ($UserLinkedSources->existSocialProfile($userProfile, $site)) {
@@ -460,7 +470,8 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
 
             $this->flash->success(sprintf(_('You are now connected with %s. Please finish filling the form to complete the registration process.'), ucfirst($site)));
 
-            $this->dispatcher->forward(['action' => 'signup']);
+            return $this->dispatcher->forward(['action' => 'signup']);
+            //return $this->response->redirect('/users/signup');
             // user profile
             //echo '<pre>' . print_r( $userProfile, true ) . '</pre>';
             //$socialRegistration = new \Naruhodo\Models\UserLinkedSources();
@@ -512,6 +523,16 @@ abstract class AuthentificationManager extends \Phalcon\Mvc\Controller
         ];*/
 
         return [];
+    }
+
+    /**
+     * social connect callback page
+     * @deprecated
+     * @return void
+     */
+    public function social_authAction()
+    {
+        //$config = dirname(dirname( __FILE__ )) . "/config/social_config.php";
     }
 
     /**
