@@ -415,7 +415,7 @@ class Users extends \Phalcon\Mvc\Model
 
         return $hash;
     }
-
+    
     /**
      * Check if the user password needs to ve rehash
      * why? php shit with the new API http://www.php.net/manual/en/function.password-needs-rehash.php
