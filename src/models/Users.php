@@ -329,8 +329,6 @@ class Users extends \Phalcon\Mvc\Model
     {
         //print_r($this); die();
         $this->sex = 'U';
-        $this->firstname = ' ';
-        $this->lastname = ' ';
         $this->dob = date('Y-m-d');
         $this->lastvisit = date('Y-m-d H:i:s');
         $this->registered = date('Y-m-d H:i:s');
