@@ -75,22 +75,6 @@ class Sessions extends Model
     public $config;
 
     /**
-     * constructor
-     */
-    public function onConstruct()
-    {
-        //configuracion general del site
-        $this->config = new \stdClass();
-        $this->config->cookie_name = getenv('AUTH_COOKIE_NAME');
-        $this->config->cookie_path = getenv('AUTH_COOKIE_PATH');
-        $this->config->cookie_domain = getenv('AUTH_COOKIE_DOMAIN');
-        $this->config->cookie_secure = getenv('AUTH_COOKIE_SECURE');
-        $this->config->allow_autologin = getenv('AUTH_ALLOW_AUTOLOGIN');
-        $this->config->session_length = getenv('AUTH_SESSION_LENGHT');
-        $this->config->max_autologin_time = getenv('AUTH_MAX_AUTOLOIGN_TIME');
-    }
-
-    /**
      *
      */
     public function initialize()
@@ -98,34 +82,11 @@ class Sessions extends Model
         $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'userData']);
     }
 
-    //---------------------------------------------------------------------
-
-    /**
-     * funcion para inicialirzar las sessiones. Singlation
-     *
-     * @return phpbb_user
-     */
-    public static function start($pageId = null, $userIp)
-    {
-        if (empty(self::$userData)) {
-            $session = new self();
-            $pageId = is_null($pageId) ? getenv('PAGE_INDEX') : $pageId;
-            self::$userData = $session->pageStart($userIp, $pageId);
-        }
-
-        //if(!isset($_COOKIE[SITENAME.'-uuid']))
-        //    setcookie(SITENAME.'-uuid', uuid(), time() + 31536000, $this->config->cookie_path, $this->config->cookie_domain);
-
-        return self::$userData;
-    }
-
-    //---------------------------------------------------------------------
-
     //
     // Adds/updates a new session to the database for the given userid.
     // Returns the new session ID on success.
     //
-    public function begin($users_id, $user_ip, $page_id, $auto_create = 0, $enable_autologin = 0, $admin = 0)
+    public function begin($users_id, $userIp, $page_id, $auto_create = 0, $enable_autologin = 0, $admin = 0)
     {
         $cookieName = $this->config->cookie_name;
         $cookiePath = $this->config->cookie_path;
@@ -229,11 +190,11 @@ class Sessions extends Model
         //
         // Initial ban check against user id, IP and email address
         //
-        preg_match('/(..)(..)(..)(..)/', $user_ip, $user_ip_parts);
+        preg_match('/(..)(..)(..)(..)/', $userIp, $userIp_parts);
 
         $sql = "SELECT ip, users_id, email
             FROM  Baka\Auth\Models\Banlist
-            WHERE ip IN ('" . $user_ip_parts[1] . $user_ip_parts[2] . $user_ip_parts[3] . $user_ip_parts[4] . "', '" . $user_ip_parts[1] . $user_ip_parts[2] . $user_ip_parts[3] . "ff', '" . $user_ip_parts[1] . $user_ip_parts[2] . "ffff', '" . $user_ip_parts[1] . "ffffff')
+            WHERE ip IN ('" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . $userIp_parts[4] . "', '" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . "ff', '" . $userIp_parts[1] . $userIp_parts[2] . "ffff', '" . $userIp_parts[1] . "ffffff')
                 OR users_id = $users_id";
 
         if ($users_id != getenv('ANONYMOUS')) {
@@ -266,7 +227,7 @@ class Sessions extends Model
         $session->logged_in = $login;
         $session->is_admin = $admin;
         $session->session_id = $sessionId;
-        $session->ip = $user_ip;
+        $session->ip = $userIp;
 
         //if it didnt update then we create the session
         if (!$session->update()) {
@@ -312,14 +273,14 @@ class Sessions extends Model
                     $session = new SessionKeys();
                     $session->session_id = $auto_login_key;
                     $session->users_id = $users_id;
-                    $session->last_ip = $user_ip;
+                    $session->last_ip = $userIp;
                     $session->last_login = $currentTime;
                     $session->save();
                 } else {
                     $session = new SessionKeys();
                     $session->session_id = $auto_login_key;
                     $session->users_id = $users_id;
-                    $session->last_ip = $user_ip;
+                    $session->last_ip = $userIp;
                     $session->last_login = $currentTime;
                     $session->save();
                 }
@@ -335,7 +296,7 @@ class Sessions extends Model
         }
 
         $userData['session_id'] = $sessionId;
-        $userData['session_ip'] = $user_ip;
+        $userData['session_ip'] = $userIp;
         $userData['session_users_id'] = $users_id;
         $userData['session_logged_in'] = $login;
         $userData['session_page'] = $page_id;
@@ -365,38 +326,15 @@ class Sessions extends Model
         return $userInfo;
     }
 
-    //---------------------------------------------------------------------
-
     //
     // Checks for a given user session, tidies session table and updates user
     // sessions at each page refresh
     //
-    public function pageStart($user_ip, $thispage_id)
+    public function start(Users $user, string $sessionId, string $userIp, int $pageId)
     {
-        $cookieName = $this->config->cookie_name;
-        $cookiePath = $this->config->cookie_path;
-        $cookieDomain = $this->config->cookie_domain;
-        $cookieSecure = $this->config->cookie_secure;
-        $userInfo = new Users();
-
         $currentTime = time();
 
-        if (isset($_COOKIE[$cookieName . '_sid']) || isset($_COOKIE[$cookieName . '_data'])) {
-            $sessionData = isset($_COOKIE[$cookieName . '_data']) ? @unserialize(stripslashes($_COOKIE[$cookieName . '_data'])) : array();
-            $sessionId = isset($_COOKIE[$cookieName . '_sid']) ? $_COOKIE[$cookieName . '_sid'] : '';
-            $sessionmethod = getenv('SESSION_METHOD_COOKIE');
-        } else {
-            $sessionData = array();
-            $sessionId = (isset($_GET['sid'])) ? $_GET['sid'] : '';
-            $sessionmethod = getenv('SESSION_METHOD_GET');
-        }
-
-        // filter the session id regex
-        if (!preg_match('/^[A-Za-z0-9]*$/', $sessionId)) {
-            $sessionId = '';
-        }
-
-        $thispage_id = (int) $thispage_id;
+        $pageId = (int) $pageId;
 
         //
         // Does a session exist?
@@ -419,11 +357,6 @@ class Sessions extends Model
             //session data
             $userData = $result->getFirst();
 
-            //user data, why all this shit? cause that the way phsql works -_-
-            //$sqlUserData = $result->toArray()[0]['u']->toArray();
-            //$sqlSessionData = $result->toArray()[0]['s']->toArray();
-            //$userData = array_merge($sqlUserData, $sqlSessionData);
-
             //
             // Did the session exist in the DB?
             //
@@ -436,7 +369,7 @@ class Sessions extends Model
                  * @todo reviar esto del chekeo de las ips
                  */
                 $ip_check_s = substr($userData->session->ip, 0, 6);
-                $ip_check_u = substr($user_ip, 0, 6);
+                $ip_check_u = substr($userIp, 0, 6);
 
                 if ($ip_check_s == $ip_check_u) {
                     //$SID = ($sessionmethod == getenv('SESSION_METHOD_GET') || defined('IN_ADMIN')) ? 'sid=' . $sessionId : '';
@@ -449,7 +382,7 @@ class Sessions extends Model
                         //update the user session
                         $session = new self();
                         $session->session_time = $currentTime;
-                        $session->session_page = $thispage_id;
+                        $session->session_page = $pageId;
                         $session->session_id = $userData->session->session_id;
 
                         // A little trick to reset session_admin on session re-usage
@@ -466,31 +399,17 @@ class Sessions extends Model
                             $user = new Users();
                             $user->users_id = $userData->user->getId();
                             $user->session_time = $currentTime;
-                            $user->session_page = $thispage_id;
+                            $user->session_page = $pageId;
                             $user->update();
                         }
 
                         $this->clean($userData->session->session_id);
-
-                        //update cookies
-                        $cookieExpire = $currentTime + (($this->config->max_autologin_time) ? 86400 * (int) $this->config->max_autologin_time : 31536000);
-                        setcookie($cookieName . '_data', serialize($sessionData), $currentTime + 31536000, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
-                        setcookie($cookieName . '_sid', $sessionId, $cookieExpire, (string) $cookiePath, (string) $cookieDomain, (int) $cookieSecure, 1);
+                      
                     }
 
                     $userInfo = $userInfo->getById($userData->user->getId());
 
-                    // Add the session_key to the userdata array if it is set
-                    if (isset($sessionData['autologinid']) && !empty($sessionData['autologinid'])) {
-                        $userInfo->session_key = $sessionData['autologinid'];
-                    }
-
                     $userInfo->session_id = $userData->session->session_id;
-
-                    //if not getenv('ANONYMOUS') user online
-                    if ($userData->user->getId() != getenv('ANONYMOUS')) {
-                        $userInfo->loggedIn = true;
-                    }
 
                     return $userInfo;
                 }
@@ -503,7 +422,7 @@ class Sessions extends Model
         //
         $users_id = (isset($sessionData['userid'])) ? intval($sessionData['userid']) : getenv('ANONYMOUS');
 
-        if (!($userData = $this->begin($users_id, $user_ip, $thispage_id, true))) {
+        if (!($userData = $this->begin($users_id, $userIp, $pageId, true))) {
             throw new \Exception(_('Error while creating session.'));
         }
 
@@ -520,8 +439,6 @@ class Sessions extends Model
         return $userInfo;
 
     }
-
-    //---------------------------------------------------------------------
 
     /**
      * Removes expired sessions and auto-login keys from the database

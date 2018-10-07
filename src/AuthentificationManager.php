@@ -27,6 +27,10 @@ abstract class AuthentificationManager extends BaseController
     {
         $this->userLinkedSourcesModel = new UserLinkedSources();
         $this->userModel = new Users();
+
+        if (!isset($this->config->jwt)) {
+            throw new Exception('You need to configure your app JWT');
+        }
     }
 
     /**
@@ -59,10 +63,25 @@ abstract class AuthentificationManager extends BaseController
 
         //login the user
         try {
+            $random = new \Phalcon\Security\Random();
+
             $userData = Users::login($username, $password, $remember, $admin, $userIp);
 
-            $userData->password = null; //clean password
-            return $this->response($userData);
+            //save in user logs
+            $payload = [
+                'sessionId' => $random->uuid(),
+                'email' => $userData->getEmail(),
+                'iat' => time(),
+            ];
+
+            $token = $this->auth->make($payload);
+
+            return $this->response([
+                'token' => $token,
+                'time' => date('Y-m-d H:i:s'),
+                'expires' => date('Y-m-d H:i:s', strtotime($this->config->jwt->expirationTime)),
+                'id' => $userData->getId(),
+            ]);
         } catch (Exception $e) {
             throw new Exception($e->getMessage());
         }

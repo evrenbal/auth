@@ -8,6 +8,25 @@ MC Auth Library to avoid having to redo a user signup flow for apps.
 codecept run
 ```
 
+## JWT
+Add JWT to your configuration
+
+````
+'jwt' => [
+    'secretKey' => getenv('JWT_SECURITY_HASH'),
+    'expirationTime' => '1 hour', #strtotime
+    'payload' => [
+        'exp' => 1440,
+        'iss' => 'phalcon-jwt-auth',
+    ],
+    'ignoreUri' => [
+        'regex:auth',
+        'regex:webhook',
+        'regex:/users',
+    ],
+],
+```
+
 ## Using
 
 Add this to your service.php
