@@ -336,7 +336,6 @@ class Users extends Model
      */
     public function signUp()
     {
-        //print_r($this); die();
         $this->sex = 'U';
 
         if (empty($this->firstname)) {
@@ -432,7 +431,7 @@ class Users extends Model
 
         return $hash;
     }
-
+    
     /**
      * Check if the user password needs to ve rehash
      * why? php shit with the new API http://www.php.net/manual/en/function.password-needs-rehash.php
