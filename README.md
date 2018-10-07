@@ -56,23 +56,40 @@ ANONYMOUS=0
 ## Router
 
 ```
-$router->add('/users', [
-    'namespace' => 'Phalcon\\Controllers\\',
-    'controller' => 'users',
-    'action' => 'home',
+
+$router->post('/auth', [
+    '\Your\NameSpace\AuthController',
+    'login',
 ]);
 
-$router->add('/users/sign-up', [
-    'namespace' => 'Phalcon\\Controllers\\',
-    'controller' => 'users',
-    'action' => 'signup',
+$router->post('/auth/signup', [
+    '\Your\NameSpace\AuthController',
+    'signup',
 ]);
 
-$router->add('/users/thank-you', [
-    'namespace' => 'Phalcon\\Controllers\\',
-    'controller' => 'users',
-    'action' => 'thankyou',
+$router->post('/auth/logout', [
+    '\Your\NameSpace\AuthController',
+    'logout',
 ]);
+
+#get email for new password
+$router->post('/auth/recover', [
+    '\Your\NameSpace\AuthController',
+    'recover',
+]);
+
+#update new password
+$router->put('/auth/{key}/reset', [
+    '\Your\NameSpace\AuthController',
+    'reset',
+]);
+
+#active the account
+$router->put('/auth/{key}/activate', [
+    '\Your\NameSpace\AuthController',
+    'activate',
+]);
+
 ```
 
 ## Social logins
