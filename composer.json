@@ -1,19 +1,22 @@
 {
     "name": "baka/auth",
     "description": "Baka Component for user authentification",
-    "authors": [
-        {
-            "name": "kaioken",
-            "email": "max@mctekk.com"
-        }
-    ],
+    "authors": [{
+        "name": "kaioken",
+        "email": "max@mctekk.com"
+    }],
     "minimum-stability": "dev",
+    "repositories": [{
+        "type": "vcs",
+        "url": "git@bitbucket.org:mctekk/database.git"
+    }],
     "require": {
         "php": ">=7.0",
         "ext-phalcon": ">=3.0.0",
         "vlucas/phpdotenv": "^2.0",
         "phalcon/incubator": "~3.0",
-        "nesbot/carbon": "^1.21"
+        "nesbot/carbon": "^1.21",
+        "baka/database": "dev-master"
     },
     "require-dev": {
         "codeception/verify": "*",
@@ -27,11 +30,10 @@
             "Baka\\Auth\\Models\\": "src/models/"
         }
     },
-     "autoload-dev": {
+    "autoload-dev": {
         "psr-4": {
             "Baka\\Auth\\": "src/",
             "Baka\\Auth\\Models\\": "src/models/"
-
         }
-    }   
+    }
 }

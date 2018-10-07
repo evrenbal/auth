@@ -1,8 +1,10 @@
 <?php
 
-namespace Baka\Models;
+namespace Baka\Auth\Models;
 
-class Sources extends \Phalcon\Mvc\Model
+use Baka\Database\Model;
+
+class Sources extends Model
 {
     /**
      * @var integer
@@ -44,7 +46,7 @@ class Sources extends \Phalcon\Mvc\Model
      *
      * @return int
      */
-    public function getId()
+    public function getId() : int
     {
         return $this->source_id;
     }
