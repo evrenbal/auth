@@ -1,4 +1,4 @@
-# Baka-Auth
+# Baka Auth
 
 MC Auth Library to avoid having to redo a user signup flow for apps.
 
