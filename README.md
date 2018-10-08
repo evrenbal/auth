@@ -11,7 +11,7 @@ codecept run
 ## JWT
 Add JWT to your configuration
 
-````
+```
 'jwt' => [
     'secretKey' => getenv('JWT_SECURITY_HASH'),
     'expirationTime' => '1 hour', #strtotime
