@@ -12,6 +12,7 @@ use Phalcon\Validation\Validator\Email as EmailValidator;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\StringLength;
 use \Baka\Http\Rest\BaseController;
+use Baka\Auth\Models\Sessions;
 
 abstract class AuthentificationManager extends BaseController
 {
@@ -27,6 +28,10 @@ abstract class AuthentificationManager extends BaseController
     {
         $this->userLinkedSourcesModel = new UserLinkedSources();
         $this->userModel = new Users();
+
+        if (!isset($this->config->jwt)) {
+            throw new Exception('You need to configure your app JWT');
+        }
     }
 
     /**
@@ -58,14 +63,31 @@ abstract class AuthentificationManager extends BaseController
         }
 
         //login the user
-        try {
-            $userData = Users::login($username, $password, $remember, $admin, $userIp);
 
-            $userData->password = null; //clean password
-            return $this->response($userData);
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
+        $random = new \Phalcon\Security\Random();
+
+        $userData = Users::login($username, $password, $remember, $admin, $userIp);
+
+        $sessionId = $random->uuid();
+        //save in user logs
+        $payload = [
+                'sessionId' => $sessionId,
+                'email' => $userData->getEmail(),
+                'iat' => time(),
+            ];
+
+        $token = $this->auth->make($payload);
+
+        //start session
+        $session = new Sessions();
+        $session->start($userData, $sessionId, $token, $this->request->getClientAddress(), 1);
+
+        return $this->response([
+                'token' => $token,
+                'time' => date('Y-m-d H:i:s'),
+                'expires' => date('Y-m-d H:i:s', strtotime($this->config->jwt->expirationTime)),
+                'id' => $userData->getId(),
+            ]);
     }
 
     /**

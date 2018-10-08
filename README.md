@@ -8,6 +8,25 @@ MC Auth Library to avoid having to redo a user signup flow for apps.
 codecept run
 ```
 
+## JWT
+Add JWT to your configuration
+
+````
+'jwt' => [
+    'secretKey' => getenv('JWT_SECURITY_HASH'),
+    'expirationTime' => '1 hour', #strtotime
+    'payload' => [
+        'exp' => 1440,
+        'iss' => 'phalcon-jwt-auth',
+    ],
+    'ignoreUri' => [
+        'regex:auth',
+        'regex:webhook',
+        'regex:/users',
+    ],
+],
+```
+
 ## Using
 
 Add this to your service.php
@@ -18,12 +37,28 @@ Add this to your service.php
 *
 * @return Session
 */
-$di->set('userData', function () {
+$di->set('userData', function () use ($config, $auth) {
 
+    $data = $auth->data();
     $session = new \Baka\Auth\Models\Sessions();
     $request = new \Phalcon\Http\Request();
 
-    return \Baka\Auth\Models\Sessions::start(1, $request->getClientAddress());
+    if (!empty($data)) {
+        //user
+        if (!$user = Users::getByEmail($data['email'])) {
+            throw new Exception('User not found');
+        }
+
+        //status
+        if (!$user->status) {
+            throw new Exception('User not active');
+        }
+        
+        return Sessions::check($user, $data['sessionId'], $request->getClientAddress(), 1);
+    } else {
+        throw new Exception('User not found');
+    }
+
 });
 ```
 

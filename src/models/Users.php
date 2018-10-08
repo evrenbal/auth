@@ -233,7 +233,7 @@ class Users extends Model
         if ($userData = Users::findFirstById($userId, $options)) {
             return $userData;
         } else {
-            throw new \Exception(_('The specified user does not exist in our database.'));
+            throw new Exception(_('The specified user does not exist in our database.'));
         }
     }
 
@@ -281,7 +281,7 @@ class Users extends Model
 
             // Check to see if user is allowed to login again... if his tries are exceeded
             if ($userInfo->user_last_login_try && $config->login_reset_time && $config->max_login_attempts && $userInfo->user_last_login_try >= (time() - ($config->login_reset_time * 60)) && $userInfo->user_login_tries >= $config->max_login_attempts) {
-                throw new \Exception(sprintf(_('You have exhausted all login attempts.'), $config->max_login_attempts));
+                throw new Exception(sprintf(_('You have exhausted all login attempts.'), $config->max_login_attempts));
             }
 
             //will only work with php.5.5 new password api
@@ -293,22 +293,15 @@ class Users extends Model
 
                 $admin = (isset($admin)) ? 1 : 0;
 
-                $session = new \Baka\Auth\Models\Sessions();
-
-                $userSession = $session->begin($userInfo->getId(), $userIp, getenv('PAGE_INDEX'), false, $autologin, $admin);
-
                 // Reset login tries
                 $userInfo->lastvisit = date('Y-m-d H:i:s'); //volvemos tu numero de logins a 0 y intentos
                 $userInfo->user_login_tries = 0; //volvemos tu numero de logins a 0 y intentos
                 $userInfo->user_last_login_try = 0;
                 $userInfo->update();
 
-                if ($userSession) {
-                    //login correcto pasa al sistema
-                    return $userSession;
-                } else {
-                    throw new \Exception(sprintf(_("Couldn't start session: %d %s."), __LINE__, __FILE__));
-                }
+                $userInfo->password = null;
+
+               return $userInfo;
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
             elseif ($userInfo->user_active) {
                 // Save login tries and last login
@@ -318,14 +311,14 @@ class Users extends Model
                     $userInfo->update();
                 }
 
-                throw new \Exception(_('Wrong password, please try again.'));
+                throw new Exception(_('Wrong password, please try again.'));
             } elseif ($userInfo->isBanned()) {
-                throw new \Exception(_('User has not been banned, please check your email for the activation link.'));
+                throw new Exception(_('User has not been banned, please check your email for the activation link.'));
             } else {
-                throw new \Exception(_('User has not been activated, please check your email for the activation link.'));
+                throw new Exception(_('User has not been activated, please check your email for the activation link.'));
             }
         } else {
-            throw new \Exception(_('The specified user does not exist.'));
+            throw new Exception(_('The specified user does not exist.'));
         }
     }
 
@@ -350,7 +343,7 @@ class Users extends Model
         $this->lastvisit = date('Y-m-d H:i:s');
         $this->registered = date('Y-m-d H:i:s');
         $this->password = self::passwordHash($this->password);
-        $this->timezone = "America/New_York";
+        $this->timezone = 'America/New_York';
         $this->user_level = 3;
         $this->user_active = 0;
         $this->banned = 'N';
@@ -431,7 +424,7 @@ class Users extends Model
 
         return $hash;
     }
-    
+
     /**
      * Check if the user password needs to ve rehash
      * why? php shit with the new API http://www.php.net/manual/en/function.password-needs-rehash.php
@@ -615,7 +608,7 @@ class Users extends Model
             return $redisConfig;
         }
 
-        $config = array();
+        $config = [];
         $userConfiguration = $this->getConfigs(['hydration' => \Phalcon\Mvc\Model\Resultset::HYDRATE_ARRAYS]);
 
         foreach ($userConfiguration as $value) {
