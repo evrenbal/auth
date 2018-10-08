@@ -4,14 +4,14 @@ MC Auth Library to avoid having to redo a user signup flow for apps.
 
 ## Testing
 
-```
+```bash
 codecept run
 ```
 
 ## JWT
 Add JWT to your configuration
 
-```
+```php
 'jwt' => [
     'secretKey' => getenv('JWT_SECURITY_HASH'),
     'expirationTime' => '1 hour', #strtotime
@@ -31,7 +31,7 @@ Add JWT to your configuration
 
 Add this to your service.php
 
-```
+```php
 /**
 * UserData dependency injection for the system
 *
@@ -64,16 +64,20 @@ $di->set('userData', function () use ($config, $auth) {
 
 ## Generate migration files
 
-`$ phalcon migration --action=run --migrations=migrations --config=</path/to/config.php>`
+```bash
+$ phalcon migration --action=run --migrations=migrations --config=</path/to/config.php>
+```
 
 ## Import migration into project
 
-`$phalcon migration --action=run --migrations=vendor/baka/auth/migrations/`
+```bash
+$ phalcon migration --action=run --migrations=vendor/baka/auth/migrations/
+```
 
 ## ENV
 
-```
-//AUTH
+```ini
+# AUTH
 AUTH_COOKIE_NAME=
 AUTH_COOKIE_PATH=
 AUTH_COOKIE_DOMAIN=
@@ -90,8 +94,7 @@ ANONYMOUS=0
 
 ## Router
 
-```
-
+```php
 $router->post('/auth', [
     '\Your\NameSpace\AuthController',
     'login',
@@ -107,19 +110,19 @@ $router->post('/auth/logout', [
     'logout',
 ]);
 
-#get email for new password
+# get email for new password
 $router->post('/auth/recover', [
     '\Your\NameSpace\AuthController',
     'recover',
 ]);
 
-#update new password
+# update new password
 $router->put('/auth/{key}/reset', [
     '\Your\NameSpace\AuthController',
     'reset',
 ]);
 
-#active the account
+# active the account
 $router->put('/auth/{key}/activate', [
     '\Your\NameSpace\AuthController',
     'activate',
@@ -129,9 +132,11 @@ $router->put('/auth/{key}/activate', [
 
 ## Social logins
 
-``"hybridauth/hybridauth": "dev-3.0.0-Remake",``
-
+```json
+"hybridauth/hybridauth": "dev-3.0.0-Remake",
 ```
+
+```php
 <?php
 'social_config' => [
     // required
@@ -154,7 +159,7 @@ http://site.com/users/social/Facebook
 
 You need to add this to your registration process to idenfity social login
 
-```
+```volt
 {% if socialConnect %}
     <input type="hidden" name="socialConnect" value="1">
 {% endif %}
