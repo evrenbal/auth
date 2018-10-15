@@ -530,7 +530,7 @@ class Users extends Model
      */
     public function isAdmin()
     {
-        return $this->user_level == 1 ? true : false;
+        return $this->user_level == 1;
     }
 
     /**
@@ -540,7 +540,7 @@ class Users extends Model
      */
     public function isModerator()
     {
-        return $this->isAdmin() ? true : false;
+        return $this->isAdmin();
     }
 
     /**
