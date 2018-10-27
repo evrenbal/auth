@@ -11,8 +11,9 @@ use Phalcon\Validation\Validator\Uniqueness;
 use Locale;
 use stdClass;
 use Phalcon\Http\Request;
+use Baka\Database\Model;
 
-class Users extends Baka\Database\Model
+class Users extends Model
 {
     /**
      * @var int
@@ -276,51 +277,51 @@ class Users extends Baka\Database\Model
         $config->max_login_attempts = getenv('AUTH_MAX_AUTOLOGIN_ATTEMPS');
 
         //if its a email lets by it by email, if not by displayname
-        $userInfo = self::getByEmail($email);
+        $user = self::getByEmail($email);
 
         //first we find the user
-        if ($userInfo) {
+        if ($user) {
             // If the last login is more than x minutes ago, then reset the login tries/time
-            if ($userInfo->user_last_login_try && $config->login_reset_time && $userInfo->user_last_login_try < (time() - ($config->login_reset_time * 60))) {
-                $userInfo->user_login_tries = 0; //turn back to 0 attems, succes
-                $userInfo->user_last_login_try = 0;
-                $userInfo->update();
+            if ($user->user_last_login_try && $config->login_reset_time && $user->user_last_login_try < (time() - ($config->login_reset_time * 60))) {
+                $user->user_login_tries = 0; //turn back to 0 attems, succes
+                $user->user_last_login_try = 0;
+                $user->update();
             }
 
             // Check to see if user is allowed to login again... if his tries are exceeded
-            if ($userInfo->user_last_login_try && $config->login_reset_time && $config->max_login_attempts && $userInfo->user_last_login_try >= (time() - ($config->login_reset_time * 60)) && $userInfo->user_login_tries >= $config->max_login_attempts) {
+            if ($user->user_last_login_try && $config->login_reset_time && $config->max_login_attempts && $user->user_last_login_try >= (time() - ($config->login_reset_time * 60)) && $user->user_login_tries >= $config->max_login_attempts) {
                 throw new Exception(sprintf(_('You have exhausted all login attempts.'), $config->max_login_attempts));
             }
 
             //will only work with php.5.5 new password api
-            if (password_verify($password, trim($userInfo->password)) && $userInfo->user_active) {
+            if (password_verify($password, trim($user->password)) && $user->user_active) {
                 //rehas passw if needed
-                $userInfo->passwordNeedRehash($password);
+                $user->passwordNeedRehash($password);
 
                 $autologin = (isset($autologin)) ? true : 0;
 
                 $admin = (isset($admin)) ? 1 : 0;
 
                 // Reset login tries
-                $userInfo->lastvisit = date('Y-m-d H:i:s');
-                $userInfo->user_login_tries = 0;
-                $userInfo->user_last_login_try = 0;
-                $userInfo->update();
+                $user->lastvisit = date('Y-m-d H:i:s');
+                $user->user_login_tries = 0;
+                $user->user_last_login_try = 0;
+                $user->update();
 
-                $userInfo->password = null;
+                $user->password = null;
 
-                return $userInfo;
+                return $user;
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
-            elseif ($userInfo->user_active) {
+            elseif ($user->user_active) {
                 // Save login tries and last login
-                if ($userInfo->getId() != ANONYMOUS) {
-                    $userInfo->user_login_tries += 1;
-                    $userInfo->user_last_login_try = time();
-                    $userInfo->update();
+                if ($user->getId() != ANONYMOUS) {
+                    $user->user_login_tries += 1;
+                    $user->user_last_login_try = time();
+                    $user->update();
                 }
 
                 throw new Exception(_('Invalid Username or Password.'));
-            } elseif ($userInfo->isBanned()) {
+            } elseif ($user->isBanned()) {
                 throw new Exception(_('User has not been banned, please check your email for the activation link.'));
             } else {
                 throw new Exception(_('User has not been activated, please check your email for the activation link.'));

@@ -27,6 +27,28 @@ Add JWT to your configuration
 ],
 ```
 
+## Database 
+
+We use phinx for migration , to update this project db structure just run
+
+`vendor/bin/phinx-migrations generate` 
+
+To run this migration from your project just add the path of the db location to your phinx.php path 
+
+```
+<?php
+
+return [
+    'paths' => [
+        'migrations' => [
+            getenv('PHINX_CONFIG_DIR') . '/db/migrations',
+            '/home/baka/auth/db/migrations',
+        ],
+```
+
+`vendor/bin/phinx migrate -e (enviorment : development | production)`
+
+
 ## Using
 
 Add this to your service.php

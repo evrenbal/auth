@@ -66,6 +66,7 @@ abstract class AuthController extends BaseController
         $random = new \Phalcon\Security\Random();
 
         $userData = Users::login($email, $password, $remember, $admin, $userIp);
+
         $sessionId = $random->uuid();
 
         //save in user logs

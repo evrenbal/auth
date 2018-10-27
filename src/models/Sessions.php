@@ -8,7 +8,6 @@ namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
 use Exception;
-use Baka\SaaS\Models\Users;
 
 class Sessions extends Model
 {
@@ -21,6 +20,11 @@ class Sessions extends Model
      * @var integer
      */
     public $users_id;
+
+    /**
+     * @var string
+     */
+    public $token;
 
     /**
      * @var string
@@ -93,13 +97,19 @@ class Sessions extends Model
         $sql = "SELECT ip, users_id, email
             FROM  Baka\Auth\Models\Banlist
             WHERE ip IN ('" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . $userIp_parts[4] . "', '" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . "ff', '" . $userIp_parts[1] . $userIp_parts[2] . "ffff', '" . $userIp_parts[1] . "ffffff')
-                OR users_id = $user->getId()";
+                OR users_id = :user_id:";
 
-        $sql .= " OR email LIKE '" . str_replace("\'", "''", $userInfo->email) . "'
-                OR email LIKE '" . substr(str_replace("\'", "''", $userInfo->email), strpos(str_replace("\'", "''", $userInfo->email), '@')) . "'";
+        $sql .= " OR email LIKE '" . str_replace("\'", "''", $user->email) . "'
+                OR email LIKE '" . substr(str_replace("\'", "''", $user->email), strpos(str_replace("\'", "''", $user->email), '@')) . "'";
 
-        $result = $this->getModelsManager()->createQuery($sql);
-        $result = $result->execute();
+        $params = [
+            'users_id' => $user->getId(),
+        ];
+
+        $result = $this->getModelsManager()->executeQuery($sql, $params);
+
+        print_R($result);
+        die();
 
         //user ban info
         $banData = $result->toArray();

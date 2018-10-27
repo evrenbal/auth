@@ -6,6 +6,8 @@ use Baka\Database\Model;
 
 class Banlist extends Model
 {
+    public $id;
+
     /**
      * @var integer
      */
