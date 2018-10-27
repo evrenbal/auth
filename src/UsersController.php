@@ -40,7 +40,7 @@ abstract class UsersController extends BaseController
      * List of business
      *
      * @method GET
-     * url /v1/leads
+     * url /v1/users
      *
      * @param int $id
      * @return \Phalcon\Http\Response
@@ -67,22 +67,22 @@ abstract class UsersController extends BaseController
     public function getById($id) : Response
     {
         //find the info
-        $objectInfo = $this->model->findFirst([
+        $user = $this->model->findFirst([
             'id = ?0 AND is_deleted = 0',
             'bind' => [$this->userData->getId()],
         ]);
 
-        $objectInfo->password = null;
+        $user->password = null;
 
         //get relationship
         if ($this->request->hasQuery('relationships')) {
             $relationships = $this->request->getQuery('relationships', 'string');
 
-            $objectInfo = QueryParser::parseRelationShips($relationships, $objectInfo);
+            $user = QueryParser::parseRelationShips($relationships, $user);
         }
 
-        if ($objectInfo) {
-            return $this->response($objectInfo);
+        if ($user) {
+            return $this->response($user);
         } else {
             throw new Exception('Record not found');
         }
@@ -98,7 +98,7 @@ abstract class UsersController extends BaseController
      */
     public function edit($id) : Response
     {
-        if ($objectInfo = $this->model->findFirst($this->userData->getId())) {
+        if ($user = $this->model->findFirst($this->userData->getId())) {
             $request = $this->request->getPut();
 
             if (empty($request)) {
@@ -106,15 +106,15 @@ abstract class UsersController extends BaseController
             }
 
             if (array_key_exists('password', $request) && !empty($request['password'])) {
-                $objectInfo->password = Users::passwordHash($request['password']);
+                $user->password = Users::passwordHash($request['password']);
             }
 
             //update
-            if ($objectInfo->update($request, $this->updateFields)) {
-                return $this->response($objectInfo->toArray());
+            if ($user->update($request, $this->updateFields)) {
+                return $this->response($user->toArray());
             } else {
                 //didnt work
-                throw new Exception($objectInfo->getMessages()[0]);
+                throw new Exception($user->getMessages()[0]);
             }
         } else {
             throw new Exception('Record not found');

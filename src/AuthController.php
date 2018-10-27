@@ -104,7 +104,7 @@ abstract class AuthentificationManager extends BaseController
             $this->userData->logOut();
         }
 
-        return $this->response->redirect(['true']);
+        return $this->response(['Logged Out']);
     }
 
     /**
