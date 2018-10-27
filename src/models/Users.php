@@ -221,7 +221,7 @@ class Users extends Model
      *
      * @return User
      */
-    public static function getById($userId, $cache = false)
+    public static function getById($userId, $cache = false) : Users
     {
         $options = null;
         $key = 'userInfo_' . $userId;
@@ -242,7 +242,7 @@ class Users extends Model
      *
      * @return boolean
      */
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->user_active;
     }
@@ -256,7 +256,7 @@ class Users extends Model
      * @param boolean $socialLogin , if this is true it means that your are login in from a social engine, so  we wont verify your password ? :S are we sure ???
      * @return users
      */
-    public static function login($username, $password, $autologin = 1, $admin, $userIp)
+    public static function login($username, $password, $autologin = 1, $admin, $userIp) : Users
     {
         //trim username
         $username = ltrim(trim($username));
@@ -301,7 +301,7 @@ class Users extends Model
 
                 $userInfo->password = null;
 
-               return $userInfo;
+                return $userInfo;
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
             elseif ($userInfo->user_active) {
                 // Save login tries and last login
@@ -327,7 +327,7 @@ class Users extends Model
      * user signup to the service
      * @return boolean
      */
-    public function signUp()
+    public function signUp() : Users
     {
         $this->sex = 'U';
 
@@ -342,7 +342,6 @@ class Users extends Model
         $this->dob = date('Y-m-d');
         $this->lastvisit = date('Y-m-d H:i:s');
         $this->registered = date('Y-m-d H:i:s');
-        $this->password = self::passwordHash($this->password);
         $this->timezone = 'America/New_York';
         $this->user_level = 3;
         $this->user_active = 0;
@@ -367,6 +366,16 @@ class Users extends Model
 
         //fallo el registro
         return $this;
+    }
+
+    /**
+     * Before create
+     *
+     * @return void
+     */
+    public function beforeCreate()
+    {
+        $this->password = self::passwordHash($this->password);
     }
 
     /**
@@ -412,7 +421,7 @@ class Users extends Model
      *
      * @return string
      */
-    public static function passwordHash($password)
+    public static function passwordHash($password) : string
     {
         //cant use it aas a object property cause php sucks and can call a function on a property with a array -_-
         $options = [
@@ -432,7 +441,7 @@ class Users extends Model
      * @param string $password
      * @return boolean
      */
-    public function passwordNeedRehash($password)
+    public function passwordNeedRehash($password) : bool
     {
         $options = [
             //'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM), // Never use a static salt or one that is not randomly generated.
@@ -453,7 +462,7 @@ class Users extends Model
      * get user by there email address
      * @return User
      */
-    public static function getByEmail($email)
+    public static function getByEmail($email) : Users
     {
         return self::findFirst(['email = :email:', 'bind' => ['email' => $email]]);
     }
@@ -464,7 +473,7 @@ class Users extends Model
      * @param boolean $mobile
      * @return string
      */
-    public function getProfileHeader($mobile = false)
+    public function getProfileHeader($mobile = false) : string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/profile_headers/';
@@ -482,7 +491,7 @@ class Users extends Model
      * get the user avatar
      * @return string
      */
-    public function getAvatar()
+    public function getAvatar() : string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/avatars/';
@@ -501,7 +510,7 @@ class Users extends Model
      * get user nickname
      * @return string
      */
-    public function getDisplayName()
+    public function getDisplayName() : string
     {
         return strtolower($this->displayname);
     }
@@ -510,7 +519,7 @@ class Users extends Model
      * get user email
      * @return string
      */
-    public function getEmail()
+    public function getEmail() : string
     {
         return $this->email;
     }
@@ -519,7 +528,7 @@ class Users extends Model
      * is the user logged in?
      * @return boolean
      */
-    public function isLoggedIn()
+    public function isLoggedIn() : bool
     {
         return $this->loggedIn;
     }
@@ -528,7 +537,7 @@ class Users extends Model
      * is thie user admin level?
      * @return boolean
      */
-    public function isAdmin()
+    public function isAdmin() : bool
     {
         return $this->user_level == 1;
     }
@@ -538,7 +547,7 @@ class Users extends Model
      *
      * @return boolean
      */
-    public function isModerator()
+    public function isModerator() : bool
     {
         return $this->isAdmin();
     }
@@ -547,7 +556,7 @@ class Users extends Model
      * Generate a user activation key
      * @return string
      */
-    public function generateActivationKey()
+    public function generateActivationKey() : string
     {
         return sha1(mt_rand(10000, 99999) . time() . $this->email);
     }
@@ -557,7 +566,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getSex()
+    public function getSex() : string
     {
         if ($this->sex == 'M') {
             return _('Male');
@@ -573,7 +582,7 @@ class Users extends Model
      *
      * @return boolean
      */
-    public function logOut()
+    public function logOut() : bool
     {
         $session = new \Baka\Auth\Models\Sessions();
         $session->end($this);
@@ -586,7 +595,7 @@ class Users extends Model
      *
      * @return true
      */
-    public function cleanSession()
+    public function cleanSession() : bool
     {
         $query = new \Phalcon\Mvc\Model\Query("DELETE FROM \Baka\Auth\Models\Sessions WHERE user_id = '{$this->getId()}'", $this->getDI());
         $query->execute();
@@ -599,7 +608,7 @@ class Users extends Model
     /**
      * Give the user a order array with the user configuration
      */
-    public function getConfig()
+    public function getConfig() : array
     {
         $redis = $this->getDI()->getRedis();
 
@@ -636,7 +645,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getSessionId()
+    public function getSessionId() : string
     {
         //if its empty get it from the relationship, else get it from the property
         return empty($this->session_id) ? $this->getSession(['order' => 'time desc'])->session_id : $this->session_id;
@@ -661,7 +670,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguage($short = false)
+    public function getLanguage($short = false) : string
     {
         if ($this->isLoggedIn() && !empty($this->language)) {
             $lang = !$short ? strtolower($this->language) . '_' . $this->language : strtolower($this->language);
@@ -683,7 +692,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguageUrl()
+    public function getLanguageUrl() : string
     {
         if (strtolower($this->getLanguage()) == 'es_es') {
             return '/es';
@@ -697,7 +706,7 @@ class Users extends Model
      *
      * @return [type] [description]
      */
-    public function usingSpanish()
+    public function usingSpanish() : bool
     {
         if (strtolower($this->getLanguage()) == 'es_es') {
             return true;

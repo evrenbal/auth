@@ -148,8 +148,14 @@ abstract class AuthentificationManager extends BaseController
 
         //user registration
         try {
+            $this->db->begin();
+
             $user->signup();
+
+            $this->db->commit();
         } catch (Exception $e) {
+            $this->db->rollback();
+
             throw new Exception($e->getMessage());
         }
 
