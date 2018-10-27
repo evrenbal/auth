@@ -7,12 +7,12 @@ class SessionKeys extends \Phalcon\Mvc\Model
     /**
      * @var string
      */
-    public $session_id;
+    public $sessions_id;
 
     /**
      * @var integer
      */
-    public $user_id;
+    public $users_id;
 
     /**
      * @var string
@@ -23,4 +23,12 @@ class SessionKeys extends \Phalcon\Mvc\Model
      * @var string
      */
     public $last_login;
+
+    /**
+     * Initialize
+     */
+    public function initialize()
+    {
+        $this->belongsTo('sessions_id', 'Baka\Auth\Models\Sesssions', 'id', ['alias' => 'session']);
+    }
 }

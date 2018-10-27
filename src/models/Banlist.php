@@ -20,4 +20,12 @@ class Banlist extends Model
      * @var string
      */
     public $email;
+
+    /**
+     * Initialize
+     */
+    public function initialize()
+    {
+        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
+    }
 }

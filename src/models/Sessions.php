@@ -15,7 +15,7 @@ class Sessions extends Model
     /**
      * @var string
      */
-    public $sessionId;
+    public $id;
 
     /**
      * @var integer
@@ -62,11 +62,12 @@ class Sessions extends Model
     public $config;
 
     /**
-     *
+     * Initialize
      */
     public function initialize()
     {
-        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'userData']);
+        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
+        $this->hasMany('id', 'Baka\Auth\Models\Users', 'sessions_id', ['alias' => 'sessionKeys']);
     }
 
     /**
@@ -121,7 +122,7 @@ class Sessions extends Model
         $session->page = $pageId;
         $session->logged_in = 1;
         $session->is_admin = $user->isAdmin();
-        $session->session_id = $sessionId;
+        $session->id = $sessionId;
         $session->token = $token;
         $session->ip = $userIp;
 
@@ -139,7 +140,7 @@ class Sessions extends Model
 
         //create a new one
         $session = new SessionKeys();
-        $session->session_id = $sessionId;
+        $session->sessions_id = $sessionId;
         $session->users_id = $user->getId();
         $session->last_ip = $userIp;
         $session->last_login = $currentTime;
@@ -177,7 +178,7 @@ class Sessions extends Model
         //
         $sql = "SELECT user.*, session.*
                 FROM Baka\Auth\Models\Sessions session, Baka\Auth\Models\Users user
-                WHERE session.session_id = :session_id:
+                WHERE session.id = :session_id:
                     AND user.id = session.users_id";
 
         $result = $this->getModelsManager()->createQuery($sql);
@@ -216,7 +217,7 @@ class Sessions extends Model
                     $session = new self();
                     $session->session_time = $currentTime;
                     $session->session_page = $pageId;
-                    $session->session_id = $sessionId;
+                    $session->id = $sessionId;
 
                     $session->update();
 
@@ -262,13 +263,13 @@ class Sessions extends Model
         //
         $sql = "DELETE FROM  Baka\Auth\Models\Sessions
             WHERE time < :session_time:
-                AND session_id <> :session_id: ";
+                AND id <> :session_id: ";
 
         $session_time = time() - (int) $this->config->session_length;
 
         $params = [
             'session_time' => $session_time,
-            'session_id' => $sessionId,
+            'id' => $sessionId,
         ];
 
         $result = $this->getModelsManager()->executeQuery($sql, $params);

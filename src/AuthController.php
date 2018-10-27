@@ -11,10 +11,10 @@ use Phalcon\Validation\Validator\Confirmation;
 use Phalcon\Validation\Validator\Email as EmailValidator;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\StringLength;
-use \Baka\Http\Rest\BaseController;
+use Baka\Http\Rest\BaseController;
 use Baka\Auth\Models\Sessions;
 
-abstract class AuthentificationManager extends BaseController
+abstract class AuthController extends BaseController
 {
     protected $userLinkedSourcesModel;
     protected $userModel;
@@ -43,15 +43,15 @@ abstract class AuthentificationManager extends BaseController
      */
     public function login(): Response
     {
-        $username = $this->request->getPost('username', 'string');
+        $email = $this->request->getPost('email', 'string');
         $password = $this->request->getPost('password', 'string');
-        $admin = $this->request->getPost('site_baka_admin');
+        $admin = $this->request->getPost('is_admin', 'int', 0);
         $userIp = $this->request->getClientAddress();
         $remember = $this->request->getPost('remember', 'int', 1);
 
         //Ok let validate user password
         $validation = new Validation();
-        $validation->add('username', new PresenceOf(['message' => _('The username is required.')]));
+        $validation->add('email', new PresenceOf(['message' => _('The email is required.')]));
         $validation->add('password', new PresenceOf(['message' => _('The password is required.')]));
 
         //validate this form for password
@@ -63,12 +63,11 @@ abstract class AuthentificationManager extends BaseController
         }
 
         //login the user
-
         $random = new \Phalcon\Security\Random();
 
-        $userData = Users::login($username, $password, $remember, $admin, $userIp);
-
+        $userData = Users::login($email, $password, $remember, $admin, $userIp);
         $sessionId = $random->uuid();
+
         //save in user logs
         $payload = [
                 'sessionId' => $sessionId,

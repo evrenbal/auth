@@ -9,7 +9,7 @@ class Sources extends Model
     /**
      * @var integer
      */
-    public $source_id;
+    public $id;
 
     /**
      * @var string
@@ -42,19 +42,17 @@ class Sources extends Model
     public $updated_date;
 
     /**
-     * get id
-     *
-     * @return int
+     * Initialize
      */
-    public function getId() : int
+    public function initialize()
     {
-        return $this->source_id;
+        $this->hasMany('id', 'Baka\Auth\Models\UserLinkedSources', 'source_id', ['alias' => 'linkedSource']);
     }
 
     /**
      * Get a source by its title
      */
-    public static function getByTitle($title)
+    public static function getByTitle($title): Sources
     {
         $sourceData = self::findFirstByTitle($title);
 

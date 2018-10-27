@@ -8,7 +8,6 @@ use Phalcon\Validation\Validator\Uniqueness;
 
 class UserLinkedSources extends Model
 {
-
     /**
      *
      * @var integer
@@ -34,11 +33,12 @@ class UserLinkedSources extends Model
     public $source_username;
 
     /**
-     * initialize the class
+     * initialize
      */
     public function initialize()
     {
-        $this->belongsTo("users_id", "Baka\Models\Users", "id", ['alias' => 'users']);
+        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
+        $this->belongsTo('source_id', 'Baka\Auth\Models\Sources', 'id', ['alias' => 'source']);
     }
 
     /**
@@ -67,7 +67,6 @@ class UserLinkedSources extends Model
      */
     public function associateAccount(Users $user, \Hybridauth\User\Profile $socialProfile, $socialNetwork)
     {
-
         //si no esta asociada tu uenta
         if (!$this->existSocialProfile($socialProfile, $socialNetwork)) {
             $source = Sources::findFirst(['title = :title:', 'bind' => ['title' => strtolower($socialNetwork)]]);
@@ -105,7 +104,6 @@ class UserLinkedSources extends Model
     {
         //si existe el source que nos esta pidiendo el usuario
         if ($source = Sources::findFirst(['title = :title:', 'bind' => ['title' => strtolower($socialNetwork)]])) {
-
             //verificamos que no tenga la cuenta ya relacionada con ese social network
             $bind = [
                 'source_id' => $source->source_id,
@@ -114,13 +112,13 @@ class UserLinkedSources extends Model
 
             //si no tienes una cuenta ya registrada con social network y no estas registrado con este correo
             if ($userSocialLinked = self::findFirst(['source_id = :source_id: and source_users_id = :source_users_id:', 'bind' => $bind])) {
-                $admin = $userSocialLinked->users->isAdmin();
+                $admin = $userSocialLinked->user->isAdmin();
                 $userIp = $this->getDI()->getRequest()->getClientAddress();
                 $remember = 1;
 
                 //login the user , so we just create the user session base on the user object
                 $session = new \Baka\Auth\Models\Sessions();
-                $userSession = $session->begin($userSocialLinked->users->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
+                $userSession = $session->begin($userSocialLinked->user->getId(), $userIp, PAGE_INDEX, false, $remember, $admin);
 
                 //you are logged in
                 return true;

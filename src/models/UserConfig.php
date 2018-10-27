@@ -7,7 +7,6 @@ use Exception;
 
 class UserConfig extends Model
 {
-
     /**
      *
      * @var integer
@@ -46,10 +45,11 @@ class UserConfig extends Model
     public $updated_date;
 
     /**
-     * Initialize method for model.
+     * Initialize
      */
     public function initialize()
     {
+        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
     }
 
     /**
@@ -61,14 +61,14 @@ class UserConfig extends Model
     public function get(string $key): string
     {
         if (!$this->users_id) {
-            throw new Exception("No users is set to save config");
+            throw new Exception('No users is set to save config');
         }
 
         if ($config = $this->findFirst(['conditions' => 'users_id = ?0 and name = ?1', 'bind' => [$this->users_id, $key]])) {
             return $config->value;
         }
 
-        throw new Exception("No value found for key: " . $key);
+        throw new Exception('No value found for key: ' . $key);
     }
 
     /**
@@ -80,7 +80,7 @@ class UserConfig extends Model
     public function set(string $key, string $value): bool
     {
         if (!$this->users_id) {
-            throw new Exception("No users is set to save config");
+            throw new Exception('No users is set to save config');
         }
 
         $config = new self();
@@ -104,7 +104,7 @@ class UserConfig extends Model
     public function delete(string $key): bool
     {
         if (!$this->users_id) {
-            throw new Exception("No users is set to save config");
+            throw new Exception('No users is set to save config');
         }
 
         if ($config = $this->findFirst(['conditions' => 'users_id = ?0 and name = ?1', 'bind' => [$this->users_id, $key]])) {

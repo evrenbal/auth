@@ -2,15 +2,17 @@
 
 namespace Baka\Auth\Models;
 
-use Baka\Database\Model;
 use Exception;
 use Phalcon\Validation;
 use Phalcon\Validation\Validator\Email;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\Regex;
 use Phalcon\Validation\Validator\Uniqueness;
+use Locale;
+use stdClass;
+use Phalcon\Http\Request;
 
-class Users extends Model
+class Users extends Baka\Database\Model
 {
     /**
      * @var int
@@ -144,11 +146,17 @@ class Users extends Model
     public static $locale = 'ja_jp';
 
     /**
-     *
+     * initialize the model
      */
     public function initialize()
     {
-        $this->hasOne('id', 'Baka\Auth\Models\Sessions', 'user_id', ['alias' => 'session']);
+        $this->hasOne('id', 'Baka\Auth\Models\Sessions', 'users_id', ['alias' => 'session']);
+        $this->hasMany('id', 'Baka\Auth\Models\Sessions', 'users_id', ['alias' => 'sessions']);
+        $this->hasMany('id', 'Baka\Auth\Models\SessionKeys', 'users_id', ['alias' => 'sessionKeys']);
+        $this->hasMany('id', 'Baka\Auth\Models\Banlist', 'users_id', ['alias' => 'bans']);
+        $this->hasMany('id', 'Baka\Auth\Models\Sessions', 'users_id', ['alias' => 'sessions']);
+        $this->hasMany('id', 'Baka\Auth\Models\UserConfig', 'users_id', ['alias' => 'config']);
+        $this->hasMany('id', 'Baka\Auth\Models\UserLinkedSources', 'users_id', ['alias' => 'sources']);
     }
 
     /**
@@ -256,25 +264,25 @@ class Users extends Model
      * @param boolean $socialLogin , if this is true it means that your are login in from a social engine, so  we wont verify your password ? :S are we sure ???
      * @return users
      */
-    public static function login($username, $password, $autologin = 1, $admin, $userIp) : Users
+    public static function login($email, $password, $autologin = 1, $admin, $userIp) : Users
     {
-        //trim username
-        $username = ltrim(trim($username));
+        //trim email
+        $email = ltrim(trim($email));
         $password = ltrim(trim($password));
 
         //load config
-        $config = new \stdClass();
+        $config = new stdClass();
         $config->login_reset_time = getenv('AUTH_MAX_AUTOLOGIN_TIME');
         $config->max_login_attempts = getenv('AUTH_MAX_AUTOLOGIN_ATTEMPS');
 
         //if its a email lets by it by email, if not by displayname
-        $userInfo = !filter_var($username, FILTER_VALIDATE_EMAIL) ? self::findFirstByDisplayname($username) : self::findFirstByEmail($username);
+        $userInfo = self::getByEmail($email);
 
         //first we find the user
         if ($userInfo) {
             // If the last login is more than x minutes ago, then reset the login tries/time
             if ($userInfo->user_last_login_try && $config->login_reset_time && $userInfo->user_last_login_try < (time() - ($config->login_reset_time * 60))) {
-                $userInfo->user_login_tries = 0; //volvemos tu numero de logins a 0 y intentos
+                $userInfo->user_login_tries = 0; //turn back to 0 attems, succes
                 $userInfo->user_last_login_try = 0;
                 $userInfo->update();
             }
@@ -294,8 +302,8 @@ class Users extends Model
                 $admin = (isset($admin)) ? 1 : 0;
 
                 // Reset login tries
-                $userInfo->lastvisit = date('Y-m-d H:i:s'); //volvemos tu numero de logins a 0 y intentos
-                $userInfo->user_login_tries = 0; //volvemos tu numero de logins a 0 y intentos
+                $userInfo->lastvisit = date('Y-m-d H:i:s');
+                $userInfo->user_login_tries = 0;
                 $userInfo->user_last_login_try = 0;
                 $userInfo->update();
 
@@ -311,20 +319,20 @@ class Users extends Model
                     $userInfo->update();
                 }
 
-                throw new Exception(_('Wrong password, please try again.'));
+                throw new Exception(_('Invalid Username or Password.'));
             } elseif ($userInfo->isBanned()) {
                 throw new Exception(_('User has not been banned, please check your email for the activation link.'));
             } else {
                 throw new Exception(_('User has not been activated, please check your email for the activation link.'));
             }
         } else {
-            throw new Exception(_('The specified user does not exist.'));
+            throw new Exception(_('Invalid Username or Password.'));
         }
     }
 
     /**
-     *
      * user signup to the service
+     *
      * @return boolean
      */
     public function signUp() : Users
@@ -344,7 +352,7 @@ class Users extends Model
         $this->registered = date('Y-m-d H:i:s');
         $this->timezone = 'America/New_York';
         $this->user_level = 3;
-        $this->user_active = 0;
+        $this->user_active = 1;
         $this->banned = 'N';
         $this->profile_header = ' ';
         $this->user_login_tries = 0;
@@ -357,14 +365,12 @@ class Users extends Model
         }
 
         //hash de activacion para el correo
-        //$crypt = new Phalcon\Crypt();
-        $this->user_activation_key = $this->generateActivationKey(); //sha1(mt_rand(10000,99999).time().$this->email);  // sha1($this->displayname.time()."naruho.do_^^");
+        $this->user_activation_key = $this->generateActivationKey();
 
         if (!$this->save()) {
             throw new Exception(current($this->getMessages()));
         }
 
-        //fallo el registro
         return $this;
     }
 
@@ -421,7 +427,7 @@ class Users extends Model
      *
      * @return string
      */
-    public static function passwordHash($password) : string
+    public static function passwordHash(string $password) : string
     {
         //cant use it aas a object property cause php sucks and can call a function on a property with a array -_-
         $options = [
@@ -441,7 +447,7 @@ class Users extends Model
      * @param string $password
      * @return boolean
      */
-    public function passwordNeedRehash($password) : bool
+    public function passwordNeedRehash(string  $password) : bool
     {
         $options = [
             //'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM), // Never use a static salt or one that is not randomly generated.
@@ -462,9 +468,12 @@ class Users extends Model
      * get user by there email address
      * @return User
      */
-    public static function getByEmail($email) : Users
+    public static function getByEmail(string  $email) : Users
     {
-        return self::findFirst(['email = :email:', 'bind' => ['email' => $email]]);
+        return self::findFirst([
+            'conditions' => 'email = ?0',
+            'bind' => [$email]
+        ]);
     }
 
     /**
@@ -473,7 +482,7 @@ class Users extends Model
      * @param boolean $mobile
      * @return string
      */
-    public function getProfileHeader($mobile = false) : string
+    public function getProfileHeader(bool $mobile = false) : ?string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/profile_headers/';
@@ -491,7 +500,7 @@ class Users extends Model
      * get the user avatar
      * @return string
      */
-    public function getAvatar() : string
+    public function getAvatar() : ?string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/avatars/';
@@ -539,7 +548,7 @@ class Users extends Model
      */
     public function isAdmin() : bool
     {
-        return $this->user_level == 1;
+        return (int) $this->user_level === 1;
     }
 
     /**
@@ -584,7 +593,7 @@ class Users extends Model
      */
     public function logOut() : bool
     {
-        $session = new \Baka\Auth\Models\Sessions();
+        $session = new Sessions();
         $session->end($this);
 
         return true;
@@ -657,7 +666,7 @@ class Users extends Model
      * @param  $key string
      * @return boolean
      */
-    public function hasConfig($key)
+    public function hasConfig(string $key)
     {
         $redis = $this->getDI()->getRedis();
         $hashKey = $this->getNotificationKey(); //'user_notifications_'.$this->user_id;
@@ -670,15 +679,17 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguage($short = false) : string
+    public function getLanguage(bool $short = false) : ?string
     {
+        $request = new Request();
+
         if ($this->isLoggedIn() && !empty($this->language)) {
             $lang = !$short ? strtolower($this->language) . '_' . $this->language : strtolower($this->language);
         } elseif ($this->getDI()->getSession()->has('requestLanguage')) {
             $lang = !$short ? $this->getDI()->getSession()->get('requestLanguage') . '_' . strtoupper($this->getDI()->getSession()->get('requestLanguage')) : strtolower($this->getDI()->getSession()->get('requestLanguage'));
         } else {
-            if (array_key_exists('HTTP_ACCEPT_LANGUAGE', $_SERVER)) {
-                $lang = !$short ? \Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE']) : strtolower(\Locale::acceptFromHttp($_SERVER['HTTP_ACCEPT_LANGUAGE']));
+            if (!is_null($request->getServer('HTTP_ACCEPT_LANGUAGE'))) {
+                $lang = !$short ? Locale::acceptFromHttp($request->getServer('HTTP_ACCEPT_LANGUAGE')) : strtolower(Locale::acceptFromHttp($request->getServer('HTTP_ACCEPT_LANGUAGE')));
             } else {
                 $lang = null;
             }
@@ -692,7 +703,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguageUrl() : string
+    public function getLanguageUrl() : ?string
     {
         if (strtolower($this->getLanguage()) == 'es_es') {
             return '/es';
@@ -704,7 +715,7 @@ class Users extends Model
     /**
      * Is the user using the spanish langugue?
      *
-     * @return [type] [description]
+     * @return bool
      */
     public function usingSpanish() : bool
     {
