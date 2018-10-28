@@ -467,10 +467,16 @@ class Users extends Model
      */
     public static function getByEmail(string  $email) : Users
     {
-        return self::findFirst([
+        $user = self::findFirst([
             'conditions' => 'email = ?0',
             'bind' => [$email]
         ]);
+
+        if (!$user) {
+            throw new Exception('No User Found');
+        }
+
+        return $user;
     }
 
     /**
@@ -790,5 +796,4 @@ class Users extends Model
     {
         $this->password = self::passwordHash($this->password);
     }
-    
 }
