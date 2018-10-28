@@ -37,7 +37,7 @@ abstract class AuthController extends BaseController
     /**
      * User Login
      * @method POST
-     * @url /v1/login
+     * @url /v1/auth
      *
      * @return Response
      */
@@ -108,23 +108,26 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User Login
+     * User Signup 
+     * 
      * @method POST
-     * @url /v1/signup
+     * @url /v1/users
      *
      * @return Response
      */
     public function signup(): Response
     {
-        $user = new Users();
-
+        $user = $this->userModel;
         $user->email = $this->request->getPost('email', 'email');
+        $user->firstname = ltrim(trim($this->request->getPost('firstname', 'string')));
+        $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
         $user->password = ltrim(trim($this->request->getPost('password', 'string')));
         $user->displayname = ltrim(trim($this->request->getPost('displayname', 'string')));
 
         //Ok let validate user password
         $validation = new Validation();
         $validation->add('password', new PresenceOf(['message' => _('The password is required.')]));
+        $validation->add('firstname', new PresenceOf(['message' => _('The firstname is required.')]));
         $validation->add('email', new EmailValidator(['message' => _('The email is not valid.')]));
 
         $validation->add(
@@ -142,9 +145,6 @@ abstract class AuthController extends BaseController
                 throw new Exception($message);
             }
         }
-
-        //set language
-        $user->language = $this->userData->usingSpanish() ? 'ES' : 'EN';
 
         //user registration
         try {

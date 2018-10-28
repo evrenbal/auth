@@ -356,6 +356,7 @@ class Users extends Model
         $this->timezone = 'America/New_York';
         $this->user_level = 3;
         $this->user_active = 1;
+        $this->status = 1;
         $this->banned = 'N';
         $this->profile_header = ' ';
         $this->user_login_tries = 0;
@@ -368,10 +369,10 @@ class Users extends Model
             $this->language = $this->usingSpanish() ? 'ES' : 'EN';
         }
 
-        //hash de activacion para el correo
         $this->user_activation_key = $this->generateActivationKey();
-
+        
         if (!$this->save()) {
+          
             throw new Exception(current($this->getMessages()));
         }
 
