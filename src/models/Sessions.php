@@ -97,7 +97,7 @@ class Sessions extends Model
         $sql = "SELECT ip, users_id, email
             FROM  Baka\Auth\Models\Banlist
             WHERE ip IN ('" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . $userIp_parts[4] . "', '" . $userIp_parts[1] . $userIp_parts[2] . $userIp_parts[3] . "ff', '" . $userIp_parts[1] . $userIp_parts[2] . "ffff', '" . $userIp_parts[1] . "ffffff')
-                OR users_id = :user_id:";
+                OR users_id = :users_id:";
 
         $sql .= " OR email LIKE '" . str_replace("\'", "''", $user->email) . "'
                 OR email LIKE '" . substr(str_replace("\'", "''", $user->email), strpos(str_replace("\'", "''", $user->email), '@')) . "'";
@@ -107,9 +107,6 @@ class Sessions extends Model
         ];
 
         $result = $this->getModelsManager()->executeQuery($sql, $params);
-
-        print_R($result);
-        die();
 
         //user ban info
         $banData = $result->toArray();
@@ -200,7 +197,7 @@ class Sessions extends Model
         $userData = $result->getFirst();
 
         //wtf? how did you get this token to mimic another user?
-        if ($userData->getId() != $user->getId()) {
+        if ($userData->user->getId() != $user->getId()) {
             throw new Exception('Invalid Token');
         }
 
@@ -217,6 +214,7 @@ class Sessions extends Model
              */
             $ip_check_s = substr($userData->session->ip, 0, 6);
             $ip_check_u = substr($userIp, 0, 6);
+       
 
             if ($ip_check_s == $ip_check_u) {
                 //
@@ -224,12 +222,13 @@ class Sessions extends Model
                 //
                 if ($currentTime - $userData->session->time > 60) {
                     //update the user session
-                    $session = new self();
+                    $session = self::findFirstById($sessionId);
                     $session->session_time = $currentTime;
                     $session->session_page = $pageId;
-                    $session->id = $sessionId;
 
-                    $session->update();
+                    if (!$session->update()) {
+                        throw new Exception(current($session->getMessages()));
+                    }
 
                     //update user
                     $user->users_id = $userData->user->getId();
@@ -275,11 +274,11 @@ class Sessions extends Model
             WHERE time < :session_time:
                 AND id <> :session_id: ";
 
-        $session_time = time() - (int) $this->config->session_length;
+        $sessionTime = time() - (int) $this->getDI()->getConfig()->jwt->payload->exp;
 
         $params = [
-            'session_time' => $session_time,
-            'id' => $sessionId,
+            'session_time' => $sessionTime,
+            'session_id' => $sessionId,
         ];
 
         $result = $this->getModelsManager()->executeQuery($sql, $params);
@@ -287,16 +286,14 @@ class Sessions extends Model
         //
         // Delete expired keys
         //
-        if ($this->config->max_autologin_time && $this->config->max_autologin_time > 0) {
-            $sql = 'DELETE FROM ' . SESSIONS_KEYS_TABLE . '
+        $sql = 'DELETE FROM Baka\Auth\Models\SessionKeys
                 WHERE last_login < :last_login: ';
 
-            $last_login = time() - (2 * (int) $this->config->max_autologin_time);
+        $last_login = time() - (2 * (int)$this->getDI()->getConfig()->jwt->payload->exp);
 
-            $params = ['last_login' => $last_login];
+        $params = ['last_login' => $last_login];
 
-            $result = $this->getModelsManager()->executeQuery($sql, $params);
-        }
+        $result = $this->getModelsManager()->executeQuery($sql, $params);
 
         return true;
     }

@@ -56,6 +56,8 @@ class Users extends Model
      */
     public $lastvisit;
 
+    public $default_company;
+
     /**
      * @var string
      */
@@ -257,15 +259,16 @@ class Users extends Model
     }
 
     /**
-     *  User login
+     * User login
      *
-     * @param string $username
+     * @param string $email
      * @param string $password
-     * @param int $autologin
-     * @param boolean $socialLogin , if this is true it means that your are login in from a social engine, so  we wont verify your password ? :S are we sure ???
-     * @return users
+     * @param integer $autologin
+     * @param integer $admin
+     * @param string $userIp
+     * @return Users
      */
-    public static function login($email, $password, $autologin = 1, $admin, $userIp) : Users
+    public static function login(string $email, string  $password, int $autologin = 1, int $admin, string  $userIp) : Users
     {
         //trim email
         $email = ltrim(trim($email));
@@ -308,8 +311,6 @@ class Users extends Model
                 $user->user_last_login_try = 0;
                 $user->update();
 
-                $user->password = null;
-
                 return $user;
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
             elseif ($user->user_active) {
@@ -334,7 +335,7 @@ class Users extends Model
     /**
      * user signup to the service
      *
-     * @return boolean
+     * @return Users
      */
     public function signUp() : Users
     {
@@ -348,6 +349,7 @@ class Users extends Model
             $this->lastname = ' ';
         }
 
+        $this->displayname = empty($this->displayname) && !empty($this->firstname) ? $this->generateDisplayName($this->firstname) : $this->displayname;
         $this->dob = date('Y-m-d');
         $this->lastvisit = date('Y-m-d H:i:s');
         $this->registered = date('Y-m-d H:i:s');
@@ -739,5 +741,25 @@ class Users extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Given a firstname give me a random username
+     *
+     * @param string $displayname
+     * @param integer $randNo
+     * @return string
+     */
+    protected function generateDisplayName(string $displayname, $randNo = 200): string
+    {
+        $usernameParts = array_filter(explode(' ', strtolower($displayname))); //explode and lowercase name
+        $usernameParts = array_slice($usernameParts, 0, 2); //return only first two arry part
+
+        $part1 = (!empty($usernameParts[0])) ? substr($usernameParts[0], 0, 8) : ''; //cut first name to 8 letters
+        $part2 = (!empty($usernameParts[1])) ? substr($usernameParts[1], 0, 5) : ''; //cut second name to 5 letters
+        $part3 = ($randNo) ? rand(0, $randNo) : '';
+
+        $username = $part1 . str_shuffle($part2) . $part3; //str_shuffle to randomly shuffle all characters
+        return $username;
     }
 }

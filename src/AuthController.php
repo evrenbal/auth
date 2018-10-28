@@ -85,7 +85,7 @@ abstract class AuthController extends BaseController
         return $this->response([
                 'token' => $token,
                 'time' => date('Y-m-d H:i:s'),
-                'expires' => date('Y-m-d H:i:s', strtotime($this->config->jwt->expirationTime)),
+                'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
                 'id' => $userData->getId(),
             ]);
     }

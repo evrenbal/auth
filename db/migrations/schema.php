@@ -411,7 +411,7 @@ return array (
           'COLUMN_NAME' => 'is_admin',
           'ORDINAL_POSITION' => '9',
           'COLUMN_DEFAULT' => '0',
-          'IS_NULLABLE' => 'NO',
+          'IS_NULLABLE' => 'YES',
           'DATA_TYPE' => 'enum',
           'CHARACTER_MAXIMUM_LENGTH' => '1',
           'CHARACTER_OCTET_LENGTH' => '3',
