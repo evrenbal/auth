@@ -382,16 +382,6 @@ class Users extends Model
     }
 
     /**
-     * Before create
-     *
-     * @return void
-     */
-    public function beforeCreate()
-    {
-        $this->password = self::passwordHash($this->password);
-    }
-
-    /**
      * cget the social profile of a users, passing its socialnetwork
      *
      * @param string $site
@@ -790,4 +780,15 @@ class Users extends Model
             throw new Exception(current($this->getMessages()));
         }
     }
+
+    /**
+     * Before create
+     *
+     * @return void
+     */
+    public function beforeCreate()
+    {
+        $this->password = self::passwordHash($this->password);
+    }
+    
 }
