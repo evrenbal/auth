@@ -161,6 +161,8 @@ class Users extends Model
         $this->hasMany('id', 'Baka\Auth\Models\Sessions', 'users_id', ['alias' => 'sessions']);
         $this->hasMany('id', 'Baka\Auth\Models\UserConfig', 'users_id', ['alias' => 'config']);
         $this->hasMany('id', 'Baka\Auth\Models\UserLinkedSources', 'users_id', ['alias' => 'sources']);
+        $this->hasMany('id', 'Baka\Auth\Models\UsersAssociatedCompany', 'users_id', ['alias' => 'companies']);
+        $this->hasOne('default_company', 'Baka\Auth\Models\Companies', 'id', ['alias' => 'defaultCompany']);
     }
 
     /**
@@ -371,9 +373,8 @@ class Users extends Model
         }
 
         $this->user_activation_key = $this->generateActivationKey();
-        
+
         if (!$this->save()) {
-          
             throw new Exception(current($this->getMessages()));
         }
 

@@ -54,6 +54,7 @@ class CompanySettings extends Model
      */
     public function initialize()
     {
+        $this->belongsTo('company_id', 'Baka\Auth\Models\Companies', 'id', ['alias' => 'company']);
     }
 
     /**

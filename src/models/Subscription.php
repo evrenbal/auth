@@ -110,6 +110,8 @@ class Subscription extends Model
      */
     public function initialize()
     {
+        $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
+        $this->belongsTo('company_id', 'Baka\Auth\Models\Companies', 'id', ['alias' => 'company']);
     }
 
     /**

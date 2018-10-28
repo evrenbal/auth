@@ -75,6 +75,7 @@ class Companies extends Model
     public function initialize()
     {
         $this->belongsTo('users_id', 'Baka\Auth\Models\Users', 'id', ['alias' => 'user']);
+        $this->hasMany('id', 'Baka\Auth\Models\CompanySettings', 'id', ['alias' => 'settings']);
     }
 
     /**
