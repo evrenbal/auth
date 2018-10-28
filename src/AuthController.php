@@ -108,8 +108,8 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User Signup 
-     * 
+     * User Signup
+     *
      * @method POST
      * @url /v1/users
      *
@@ -123,6 +123,7 @@ abstract class AuthController extends BaseController
         $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
         $user->password = ltrim(trim($this->request->getPost('password', 'string')));
         $user->displayname = ltrim(trim($this->request->getPost('displayname', 'string')));
+        $user->defaultCompanyName = ltrim(trim($this->request->getPost('default_company', 'string')));
 
         //Ok let validate user password
         $validation = new Validation();

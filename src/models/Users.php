@@ -57,6 +57,7 @@ class Users extends Model
     public $lastvisit;
 
     public $default_company;
+    public $defaultCompanyName;
 
     /**
      * @var string
@@ -763,5 +764,29 @@ class Users extends Model
 
         $username = $part1 . str_shuffle($part2) . $part3; //str_shuffle to randomly shuffle all characters
         return $username;
+    }
+
+    /**
+     * What to do after the creation of a new users
+     *  - Company
+     *  - add notification for this user
+     *
+     * @return void
+     */
+    public function afterCreate()
+    {
+        //create company
+        $company = new Companies();
+        $company->name = $this->defaultCompanyName;
+        $company->users_id = $this->getId();
+        if (!$company->save()) {
+            throw new Exception(current($company->getMessages()));
+        }
+
+        $this->default_company = $company->getId();
+
+        if (!$this->update()) {
+            throw new Exception(current($this->getMessages()));
+        }
     }
 }
