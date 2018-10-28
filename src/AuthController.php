@@ -80,7 +80,7 @@ abstract class AuthController extends BaseController
 
         //start session
         $session = new Sessions();
-        $session->start($userData, $sessionId, $token, $this->request->getClientAddress(), 1);
+        $session->start($userData, $sessionId, $token, $userIp, 1);
 
         return $this->response([
                 'token' => $token,
@@ -122,6 +122,8 @@ abstract class AuthController extends BaseController
         $user->firstname = ltrim(trim($this->request->getPost('firstname', 'string')));
         $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
         $user->password = ltrim(trim($this->request->getPost('password', 'string')));
+        $cleanPassword = $user->password;
+        $userIp = $this->request->getClientAddress();
         $user->displayname = ltrim(trim($this->request->getPost('displayname', 'string')));
         $user->defaultCompanyName = ltrim(trim($this->request->getPost('default_company', 'string')));
 
@@ -160,9 +162,34 @@ abstract class AuthController extends BaseController
             throw new Exception($e->getMessage());
         }
 
+        //login the user
+        $random = new \Phalcon\Security\Random();
+
+        $sessionId = $random->uuid();
+
+        //save in user logs
+        $payload = [
+            'sessionId' => $sessionId,
+            'email' => $user->getEmail(),
+            'iat' => time(),
+        ];
+
+        $token = $this->auth->make($payload);
+
+        //start session
+        $session = new Sessions();
+        $session->start($user, $sessionId, $token, $userIp, 1);
+
+        $authSession = [
+            'token' => $token,
+            'time' => date('Y-m-d H:i:s'),
+            'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
+            'id' => $user->getId(),
+        ];
+
         $user->password = null;
         $this->sendEmail($user, 'signup');
-        return $this->response($user);
+        return $this->response([$user, 'session' => $authSession]);
     }
 
     /**
