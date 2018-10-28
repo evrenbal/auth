@@ -189,7 +189,11 @@ abstract class AuthController extends BaseController
 
         $user->password = null;
         $this->sendEmail($user, 'signup');
-        return $this->response([$user, 'session' => $authSession]);
+
+        return $this->response([
+            'user' => $user,
+            'session' => $authSession
+        ]);
     }
 
     /**

@@ -128,7 +128,7 @@ class Sessions extends Model
         $session->time = $currentTime;
         $session->page = $pageId;
         $session->logged_in = 1;
-        $session->is_admin = $user->isAdmin();
+        $session->is_admin = (int) $user->isAdmin();
         $session->id = $sessionId;
         $session->token = $token;
         $session->ip = $userIp;
@@ -214,7 +214,6 @@ class Sessions extends Model
              */
             $ip_check_s = substr($userData->session->ip, 0, 6);
             $ip_check_u = substr($userIp, 0, 6);
-       
 
             if ($ip_check_s == $ip_check_u) {
                 //
