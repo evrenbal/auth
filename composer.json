@@ -1,6 +1,7 @@
 {
     "name": "baka/auth",
     "description": "Baka Component for user authentification",
+    "license": "MIT",
     "authors": [{
         "name": "kaioken",
         "email": "max@mctekk.com"
