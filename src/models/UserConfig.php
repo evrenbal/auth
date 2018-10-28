@@ -101,7 +101,7 @@ class UserConfig extends Model
      * @param string $value
      * @return bool
      */
-    public function delete(string $key): bool
+    public function deleteByKey(string $key): bool
     {
         if (!$this->users_id) {
             throw new Exception('No users is set to save config');
