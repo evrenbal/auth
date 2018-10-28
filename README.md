@@ -65,7 +65,7 @@ $di->set('userData', function () use ($config, $auth) {
     $session = new Baka\Auth\Models\Sessions();
     $request = new Phalcon\Http\Request();
 
-    if (!empty($data)) {
+    if (!empty($data) && !empty($data['sessionId'])) {
         //user
         if (!$user = Baka\Auth\Models\Users::getByEmail($data['email'])) {
             throw new Exception('User not found');
