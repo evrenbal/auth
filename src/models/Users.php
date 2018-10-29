@@ -143,6 +143,7 @@ class Users extends Model
     public $user_last_login_try;
 
     public $user_level;
+    public $is_deleted = 0;
 
     /**
      *
@@ -375,7 +376,6 @@ class Users extends Model
 
         $this->user_activation_key = $this->generateActivationKey();
 
-     
         if (!$this->save()) {
             throw new Exception(current($this->getMessages()));
         }
