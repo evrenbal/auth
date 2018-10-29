@@ -196,6 +196,10 @@ class Sessions extends Model
         //session data
         $userData = $result->getFirst();
 
+        if (empty($userData)) {
+            throw new Exception('Invalid Session');
+        }
+
         //wtf? how did you get this token to mimic another user?
         if ($userData->user->getId() != $user->getId()) {
             throw new Exception('Invalid Token');
