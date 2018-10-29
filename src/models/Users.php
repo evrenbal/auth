@@ -367,6 +367,7 @@ class Users extends Model
         $this->default_company = 0;
         $this->session_time = time();
         $this->session_page = time();
+        $this->password = self::passwordHash($this->password);
 
         if (empty($this->language)) {
             $this->language = $this->usingSpanish() ? 'ES' : 'EN';
@@ -374,6 +375,7 @@ class Users extends Model
 
         $this->user_activation_key = $this->generateActivationKey();
 
+     
         if (!$this->save()) {
             throw new Exception(current($this->getMessages()));
         }
@@ -785,15 +787,5 @@ class Users extends Model
         if (!$this->update()) {
             throw new Exception(current($this->getMessages()));
         }
-    }
-
-    /**
-     * Before create
-     *
-     * @return void
-     */
-    public function beforeCreate()
-    {
-        $this->password = self::passwordHash($this->password);
     }
 }

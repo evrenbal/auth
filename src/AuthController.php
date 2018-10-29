@@ -122,7 +122,6 @@ abstract class AuthController extends BaseController
         $user->firstname = ltrim(trim($this->request->getPost('firstname', 'string')));
         $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
         $user->password = ltrim(trim($this->request->getPost('password', 'string')));
-        $cleanPassword = $user->password;
         $userIp = $this->request->getClientAddress();
         $user->displayname = ltrim(trim($this->request->getPost('displayname', 'string')));
         $user->defaultCompanyName = ltrim(trim($this->request->getPost('default_company', 'string')));
