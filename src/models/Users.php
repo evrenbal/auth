@@ -16,9 +16,18 @@ use Baka\Database\Model;
 class Users extends Model
 {
     /**
+     * Constant for anonymous user
+     */
+    const ANONYMOUS = '-1';
+
+    /**
      * @var int
      */
     public $id;
+
+    /**
+     * @var int
+     */
     public $user_id;
 
     /**
@@ -56,6 +65,9 @@ class Users extends Model
      */
     public $lastvisit;
 
+    /**
+     * @var int
+     */
     public $default_company;
     public $defaultCompanyName;
 
@@ -319,7 +331,7 @@ class Users extends Model
             } // Only store a failed login attempt for an active user - inactive users can't login even with a correct password
             elseif ($user->user_active) {
                 // Save login tries and last login
-                if ($user->getId() != ANONYMOUS) {
+                if ($user->getId() != self::ANONYMOUS) {
                     $user->user_login_tries += 1;
                     $user->user_last_login_try = time();
                     $user->update();
