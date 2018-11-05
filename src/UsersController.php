@@ -116,9 +116,11 @@ abstract class UsersController extends CrudExtendedController
 
             //clean default company
             if (array_key_exists('default_company', $request)) {
-                $company = Companies::findFirst($request['default_company']);
-                $user->default_company = $company->getId();
-                unset($request['default_company']);
+                //@todo check if I belong to this company
+                if ($company = Companies::findFirst($request['default_company'])) {
+                    $user->default_company = $company->getId();
+                    unset($request['default_company']);
+                }
             }
 
             //update
