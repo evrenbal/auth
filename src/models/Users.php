@@ -623,10 +623,8 @@ class Users extends Model
      */
     public function cleanSession() : bool
     {
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM \Baka\Auth\Models\Sessions WHERE user_id = '{$this->getId()}'", $this->getDI());
-        $query->execute();
-        $query = new \Phalcon\Mvc\Model\Query("DELETE FROM  \Baka\Auth\Models\SessionKeys WHERE user_id = '{$this->getId()}'", $this->getDI());
-        $query->execute();
+        $session = new Sessions();
+        $session->end($this);
 
         return true;
     }
