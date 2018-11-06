@@ -283,7 +283,8 @@ abstract class AuthController extends BaseController
             // Update
             if ($userData->update()) {
                 //log the user out of the site from all devices
-                $userData->cleanSession();
+                $session = new Sessions();
+                $session->end($userData);
 
                 $this->sendEmail($userData, 'reset');
 
