@@ -224,7 +224,7 @@ abstract class AuthController extends BaseController
          *
          * if it doesnt existe then send the erro msg
          */
-        if ($recoverUser = $this->userData->getByEmail($email)) {
+        if ($recoverUser = Users::getByEmail($email)) {
             $recoverUser->user_activation_forgot = $recoverUser->generateActivationKey();
             $recoverUser->update();
 
