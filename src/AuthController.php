@@ -100,7 +100,6 @@ abstract class AuthController extends BaseController
     public function logout(): Response
     {
         if ($this->userData->isLoggedIn()) {
-            $language = $this->userData->getLanguageUrl();
             $this->userData->logOut();
         }
 

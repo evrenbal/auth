@@ -305,18 +305,14 @@ class Sessions extends Model
      * Terminates the specified session
      * It will delete the entry in the sessions table for this session,
      * remove the corresponding auto-login key and reset the cookies
+     *
+     * @param Users $user
+     * @return boolean
      */
     public function end(Users $user): bool
     {
-        $currentTime = time();
-
-        //
-        // Delete existing session
-        //
-        $session = new self();
-        $session->session_id = $users->session_id;
-        $session->users_id = $users->getId();
-        $session->delete();
+        $this->find('users_id = ' . $users->getId())->delete();
+        SessionKeys::find('users_id = ' . $users->getId())->delete();
 
         return true;
     }
