@@ -12,8 +12,8 @@
         "ext-phalcon": ">=3.0.0",
         "vlucas/phpdotenv": "^2.0",
         "phalcon/incubator": "~3.0",
-        "baka/database": "dev-master",
-        "baka/http": "dev-master",
+        "baka/database": "^0.1",
+        "baka/http": "^0.1",
         "robmorgan/phinx": "^0.10"
     },
     "require-dev": {
