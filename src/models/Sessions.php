@@ -8,6 +8,7 @@ namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
 use Exception;
+use Throwable;
 
 class Sessions extends Model
 {
@@ -262,8 +263,14 @@ class Sessions extends Model
     {
         //we sent the session id to the seassion daemon cleaner
         if (!$daemon) {
-            $queue = $this->getDI()->getQueue();
-            $queue->putInTube(getenv('SESSION_QUEUE'), $sessionId);
+            try {
+                $queue = $this->getDI()->getQueue();
+                $queue->putInTube(getenv('SESSION_QUEUE'), $sessionId);
+            } catch (Throwable $e) {
+                //we get here if beanstalkd is down, we are moving to rabbitmq
+                $this->di->getLog()->error($e->getMessages());
+                return false;
+            }
 
             return true;
         }
