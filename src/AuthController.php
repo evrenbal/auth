@@ -46,7 +46,7 @@ abstract class AuthController extends BaseController
         $email = $this->request->getPost('email', 'string');
         $password = $this->request->getPost('password', 'string');
         $admin = $this->request->getPost('is_admin', 'int', 0);
-        $userIp = $this->request->getClientAddress();
+        $userIp = !defined('API_TESTS') ? $this->request->getClientAddress() : '127.0.0.1'; //help getting the client ip on scrutinizer :(
         $remember = $this->request->getPost('remember', 'int', 1);
 
         //Ok let validate user password

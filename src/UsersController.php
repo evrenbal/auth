@@ -7,6 +7,7 @@ use Baka\Auth\Models\Companies;
 use Phalcon\Http\Response;
 use Exception;
 use Baka\Http\Rest\CrudExtendedController;
+use Baka\Http\QueryParser;
 
 /**
  * Base controller
