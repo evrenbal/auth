@@ -121,7 +121,7 @@ abstract class AuthController extends BaseController
         $user->firstname = ltrim(trim($this->request->getPost('firstname', 'string')));
         $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
         $user->password = ltrim(trim($this->request->getPost('password', 'string')));
-        $userIp = $this->request->getClientAddress();
+        $userIp = !defined('API_TESTS') ? $this->request->getClientAddress() : '127.0.0.1'; //help getting the client ip on scrutinizer :(
         $user->displayname = ltrim(trim($this->request->getPost('displayname', 'string')));
         $user->defaultCompanyName = ltrim(trim($this->request->getPost('default_company', 'string')));
 
