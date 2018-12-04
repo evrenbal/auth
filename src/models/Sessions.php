@@ -268,7 +268,7 @@ class Sessions extends Model
                 $queue->putInTube(getenv('SESSION_QUEUE'), $sessionId);
             } catch (Throwable $e) {
                 //we get here if beanstalkd is down, we are moving to rabbitmq
-                $this->di->getLog()->error($e->getMessages());
+                $this->di->getLog()->error($e->getMessage());
                 return false;
             }
 
