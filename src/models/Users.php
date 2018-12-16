@@ -377,7 +377,11 @@ class Users extends Model
         $this->profile_header = ' ';
         $this->user_login_tries = 0;
         $this->user_last_login_try = 0;
-        $this->default_company = 0;
+
+        //if the user didnt specify a default company
+        if (empty($this->default_company)) {
+            $this->default_company = 0;
+        }
         $this->session_time = time();
         $this->session_page = time();
         $this->password = self::passwordHash($this->password);

@@ -145,7 +145,7 @@ class Companies extends Model
             throw new Exception(current($usersAssociatedCompany->getMessages()));
         }
 
-        //now thta we setup de company and associated with the user we need to setup this as its default company
+        //now that we setup de company and associated with the user we need to setup this as its default company
         if (!UserConfig::findFirst(['conditions' => 'users_id = ?0 and name = ?1', 'bind' => [$this->user->getId(), self::DEFAULT_COMPANY]])) {
             $userConfig = new UserConfig();
             $userConfig->users_id = $this->user->getId();
