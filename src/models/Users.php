@@ -8,6 +8,8 @@ use Phalcon\Validation\Validator\Email;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\Regex;
 use Phalcon\Validation\Validator\Uniqueness;
+use Phalcon\Validation\Validator\Confirmation;
+use Phalcon\Validation\Validator\StringLength;
 use Locale;
 use stdClass;
 use Phalcon\Http\Request;
@@ -234,7 +236,7 @@ class Users extends Model
      *
      * @return int
      */
-    public function getId(): int
+    public function getId() : int
     {
         return $this->id;
     }
@@ -269,7 +271,7 @@ class Users extends Model
      *
      * @return boolean
      */
-    public function isActive(): bool
+    public function isActive() : bool
     {
         return $this->user_active;
     }
@@ -284,7 +286,7 @@ class Users extends Model
      * @param string $userIp
      * @return Users
      */
-    public static function login(string $email, string  $password, int $autologin = 1, int $admin, string  $userIp) : Users
+    public static function login(string $email, string $password, int $autologin = 1, int $admin, string $userIp) : Users
     {
         //trim email
         $email = ltrim(trim($email));
@@ -462,7 +464,7 @@ class Users extends Model
      * @param string $password
      * @return boolean
      */
-    public function passwordNeedRehash(string  $password) : bool
+    public function passwordNeedRehash(string $password) : bool
     {
         $options = [
             //'salt' => mcrypt_create_iv(22, MCRYPT_DEV_URANDOM), // Never use a static salt or one that is not randomly generated.
@@ -483,7 +485,7 @@ class Users extends Model
      * get user by there email address
      * @return User
      */
-    public static function getByEmail(string  $email) : Users
+    public static function getByEmail(string $email) : Users
     {
         $user = self::findFirst([
             'conditions' => 'email = ?0',
@@ -503,7 +505,7 @@ class Users extends Model
      * @param boolean $mobile
      * @return string
      */
-    public function getProfileHeader(bool $mobile = false) : ?string
+    public function getProfileHeader(bool $mobile = false) : ? string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/profile_headers/';
@@ -521,7 +523,7 @@ class Users extends Model
      * get the user avatar
      * @return string
      */
-    public function getAvatar() : ?string
+    public function getAvatar() : ? string
     {
         //$this->cdn
         $cdn = \Phalcon\DI::getDefault()->getCdn() . '/avatars/';
@@ -569,7 +571,7 @@ class Users extends Model
      */
     public function isAdmin() : bool
     {
-        return (int) $this->user_level === 1;
+        return (int)$this->user_level === 1;
     }
 
     /**
@@ -660,7 +662,7 @@ class Users extends Model
      *
      * @return UserConfig
      */
-    public function config(): UserConfig
+    public function config() : UserConfig
     {
         $config = new UserConfig();
         $config->users_id = $this->getId();
@@ -698,7 +700,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguage(bool $short = false) : ?string
+    public function getLanguage(bool $short = false) : ? string
     {
         $request = new Request();
 
@@ -722,7 +724,7 @@ class Users extends Model
      *
      * @return string
      */
-    public function getLanguageUrl() : ?string
+    public function getLanguageUrl() : ? string
     {
         if (strtolower($this->getLanguage()) == 'es_es') {
             return '/es';
@@ -750,7 +752,7 @@ class Users extends Model
      *
      * @return bool
      */
-    public function isBanned(): bool
+    public function isBanned() : bool
     {
         if ($this->banned == 'Y') {
             return true;
@@ -766,7 +768,7 @@ class Users extends Model
      * @param integer $randNo
      * @return string
      */
-    protected function generateDisplayName(string $displayname, $randNo = 200): string
+    protected function generateDisplayName(string $displayname, $randNo = 200) : string
     {
         $usernameParts = array_filter(explode(' ', strtolower($displayname))); //explode and lowercase name
         $usernameParts = array_slice($usernameParts, 0, 2); //return only first two arry part
@@ -777,6 +779,70 @@ class Users extends Model
 
         $username = $part1 . str_shuffle($part2) . $part3; //str_shuffle to randomly shuffle all characters
         return $username;
+    }
+
+    /**
+     * Update the password for a current user
+     *
+     * @param string $newPassword
+     * @return boolean
+     */
+    public function updatePassword(string $currentPassword, string $newPassword, string $verifyPassword) : bool
+    {
+        // Get the current password
+        $currentPassword = trim($currentPassword);
+   
+        // First off check that the current password matches the current password
+        if (password_verify($currentPassword, $this->password)) {
+            
+            // Get the new password and the verify
+            $newPassword = trim($newPassword);
+            $verifyPassword = trim($verifyPassword);
+
+            $data = [
+                'new_password' => $newPassword,
+                'verify_password' => $verifyPassword,
+            ];
+
+            //Ok let validate user password
+            $validation = new Validation();
+            $validation->add('new_password', new PresenceOf(['message' => 'The password is required.']));
+
+            $validation->add(
+                'new_password',
+                new StringLength([
+                    'min' => 8,
+                    'messageMinimum' => 'Password is too short. Minimum 8 characters.',
+                ])
+            );
+
+            $validation->add('new_password', new Confirmation(array(
+                'message' => 'New password and confirmation do not match.',
+                'with' => 'verify_password',
+            )));
+
+                    //validate this form for password
+            $messages = $validation->validate($data);
+            if (count($messages)) {
+                foreach ($messages as $message) {
+                    throw new Exception($message);
+                }
+            }
+
+            // Check that they are the same
+            if ($newPassword === $verifyPassword) {
+                
+                // Has the password and set it
+                $this->password = self::passwordHash($newPassword);
+
+                return true;
+
+            } else {
+                throw new Exception(_('New password and confirmation don\'t match . '));
+            }
+        }
+
+        throw new Exception(_(' Your current password is incorrect .'));
     }
 
     /**
