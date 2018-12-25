@@ -86,6 +86,16 @@ class Users extends Model
     /**
      * @var string
      */
+    public $phone_number;
+
+    /**
+     * @var string
+     */
+    public $cell_phone_number;
+
+    /**
+     * @var string
+     */
     public $timezone;
 
     /**
