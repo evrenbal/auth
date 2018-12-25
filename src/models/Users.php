@@ -207,7 +207,7 @@ class Users extends Model
             new Regex([
                 'field' => 'displayname',
                 'message' => _('Please use alphanumerics only.'),
-                'pattern' => '/^[A-Za-z0-9_-]{1,16}$/',
+                'pattern' => '/^[A-Za-z0-9_.-]{1,16}$/',
             ])
         );
 
@@ -791,10 +791,9 @@ class Users extends Model
     {
         // Get the current password
         $currentPassword = trim($currentPassword);
-   
+
         // First off check that the current password matches the current password
         if (password_verify($currentPassword, $this->password)) {
-            
             // Get the new password and the verify
             $newPassword = trim($newPassword);
             $verifyPassword = trim($verifyPassword);
@@ -816,12 +815,12 @@ class Users extends Model
                 ])
             );
 
-            $validation->add('new_password', new Confirmation(array(
+            $validation->add('new_password', new Confirmation([
                 'message' => 'New password and confirmation do not match.',
                 'with' => 'verify_password',
-            )));
+            ]));
 
-                    //validate this form for password
+            //validate this form for password
             $messages = $validation->validate($data);
             if (count($messages)) {
                 foreach ($messages as $message) {
@@ -831,12 +830,10 @@ class Users extends Model
 
             // Check that they are the same
             if ($newPassword === $verifyPassword) {
-                
                 // Has the password and set it
                 $this->password = self::passwordHash($newPassword);
 
                 return true;
-
             } else {
                 throw new Exception(_('New password and confirmation don\'t match . '));
             }

@@ -41,7 +41,7 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function login(): Response
+    public function login() : Response
     {
         $email = $this->request->getPost('email', 'string');
         $password = $this->request->getPost('password', 'string');
@@ -71,10 +71,10 @@ abstract class AuthController extends BaseController
 
         //save in user logs
         $payload = [
-                'sessionId' => $sessionId,
-                'email' => $userData->getEmail(),
-                'iat' => time(),
-            ];
+            'sessionId' => $sessionId,
+            'email' => $userData->getEmail(),
+            'iat' => time(),
+        ];
 
         $token = $this->auth->make($payload);
 
@@ -83,11 +83,11 @@ abstract class AuthController extends BaseController
         $session->start($userData, $sessionId, $token, $userIp, 1);
 
         return $this->response([
-                'token' => $token,
-                'time' => date('Y-m-d H:i:s'),
-                'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
-                'id' => $userData->getId(),
-            ]);
+            'token' => $token,
+            'time' => date('Y-m-d H:i:s'),
+            'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
+            'id' => $userData->getId(),
+        ]);
     }
 
     /**
@@ -97,7 +97,7 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function logout(): Response
+    public function logout() : Response
     {
         if ($this->userData->isLoggedIn()) {
             $this->userData->logOut();
@@ -114,9 +114,16 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function signup(): Response
+    public function signup() : Response
     {
         $user = $this->userModel;
+
+        $request = $this->request->getPost();
+
+        if (empty($request)) {
+            $request = $this->request->getJsonRawBody(true);
+        }
+
         $user->email = $this->request->getPost('email', 'email');
         $user->firstname = ltrim(trim($this->request->getPost('firstname', 'string')));
         $user->lastname = ltrim(trim($this->request->getPost('lastname', 'string')));
@@ -138,6 +145,11 @@ abstract class AuthController extends BaseController
                 'messageMinimum' => _('Password is too short. Minimum 8 characters.'),
             ])
         );
+
+        $validation->add('password', new Confirmation([
+            'message' => _('Password and confirmation do not match.'),
+            'with' => 'verify_password',
+        ]));
 
         //validate this form for password
         $messages = $validation->validate($this->request->getPost());
@@ -201,7 +213,7 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function recover(): Response
+    public function recover() : Response
     {
         //if the user submited the form and passes the security check then we start checking
         $email = $this->request->getPost('email', 'email');
@@ -244,7 +256,7 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function reset(string $key): Response
+    public function reset(string $key) : Response
     {
         //is the key empty or does it existe?
         if (empty($key) || !$userData = Users::findFirst(['user_activation_forgot = :key:', 'bind' => ['key' => $key]])) {
@@ -261,9 +273,9 @@ abstract class AuthController extends BaseController
         $validation->add('new_password', new StringLength(['min' => 8, 'messageMinimum' => _('Password is too short. Minimum 8 characters.')]));
 
         $validation->add('new_password', new Confirmation([
-                'message' => _('Passwords do not match.'),
-                'with' => 'verify_password',
-            ]));
+            'message' => _('Passwords do not match.'),
+            'with' => 'verify_password',
+        ]));
 
         //validate this form for password
         $messages = $validation->validate($this->request->getPost());
@@ -304,7 +316,7 @@ abstract class AuthController extends BaseController
      *
      * @return Response
      */
-    public function activate(string $key): Response
+    public function activate(string $key) : Response
     {
         $userData = Users::findFirst(['user_activation_key = :key:', 'bind' => ['key' => $key]]);
         //is the key empty or does it existe?
@@ -340,7 +352,7 @@ abstract class AuthController extends BaseController
      * @param String $emailAction
      * @param Users  $user
      */
-    protected function sendEmail(Users $user, string $type): void
+    protected function sendEmail(Users $user, string $type) : void
     {
         //send email for signup for this user
        /*  $this->mail
