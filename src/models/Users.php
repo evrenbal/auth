@@ -14,11 +14,14 @@ use Locale;
 use stdClass;
 use Phalcon\Http\Request;
 use Baka\Database\Model;
+use Baka\Auth\Contracts\AuthTokenTrait;
 
 class Users extends Model
 {
+    use AuthTokenTrait;
+
     /**
-     * Constant for anonymous user
+     * Constant for anonymous user.
      */
     const ANONYMOUS = '-1';
 
@@ -169,13 +172,10 @@ class Users extends Model
     public $user_level;
     public $is_deleted = 0;
 
-    /**
-     *
-     */
     public static $locale = 'ja_jp';
 
     /**
-     * initialize the model
+     * initialize the model.
      */
     public function initialize()
     {
@@ -191,7 +191,7 @@ class Users extends Model
     }
 
     /**
-     * Validations and business logic
+     * Validations and business logic.
      */
     public function validation()
     {
@@ -242,7 +242,7 @@ class Users extends Model
     }
 
     /**
-     * get Id
+     * get Id.
      *
      * @return int
      */
@@ -253,7 +253,7 @@ class Users extends Model
 
     /**
      * get the user by its Id, we can specify the cache if we want to
-     * we only get result if the user is active
+     * we only get result if the user is active.
      *
      * @param int $userId
      * @param boolean $cache
@@ -287,7 +287,7 @@ class Users extends Model
     }
 
     /**
-     * User login
+     * User login.
      *
      * @param string $email
      * @param string $password
@@ -361,7 +361,7 @@ class Users extends Model
     }
 
     /**
-     * user signup to the service
+     * user signup to the service.
      *
      * @return Users
      */
@@ -412,7 +412,7 @@ class Users extends Model
     }
 
     /**
-     * cget the social profile of a users, passing its socialnetwork
+     * cget the social profile of a users, passing its socialnetwork.
      *
      * @param string $site
      * @return Hybridauth\Entity\Profile
@@ -430,7 +430,7 @@ class Users extends Model
     }
 
     /**
-     * logout the user from its social network
+     * logout the user from its social network.
      *
      * @param string $site
      * @return boolean
@@ -448,7 +448,7 @@ class Users extends Model
     }
 
     /**
-     * Has for the user password
+     * Has for the user password.
      *
      * @param string
      *
@@ -469,7 +469,7 @@ class Users extends Model
 
     /**
      * Check if the user password needs to ve rehash
-     * why? php shit with the new API http://www.php.net/manual/en/function.password-needs-rehash.php
+     * why? php shit with the new API http://www.php.net/manual/en/function.password-needs-rehash.php.
      *
      * @param string $password
      * @return boolean
@@ -492,7 +492,7 @@ class Users extends Model
     }
 
     /**
-     * get user by there email address
+     * get user by there email address.
      * @return User
      */
     public static function getByEmail(string $email) : Users
@@ -510,7 +510,7 @@ class Users extends Model
     }
 
     /**
-     * get the user profileHeader
+     * get the user profileHeader.
      *
      * @param boolean $mobile
      * @return string
@@ -530,7 +530,7 @@ class Users extends Model
     }
 
     /**
-     * get the user avatar
+     * get the user avatar.
      * @return string
      */
     public function getAvatar() : ? string
@@ -549,7 +549,7 @@ class Users extends Model
     }
 
     /**
-     * get user nickname
+     * get user nickname.
      * @return string
      */
     public function getDisplayName() : string
@@ -558,7 +558,7 @@ class Users extends Model
     }
 
     /**
-     * get user email
+     * get user email.
      * @return string
      */
     public function getEmail() : string
@@ -585,7 +585,7 @@ class Users extends Model
     }
 
     /**
-     * Determine if the user is a moderator
+     * Determine if the user is a moderator.
      *
      * @return boolean
      */
@@ -595,7 +595,7 @@ class Users extends Model
     }
 
     /**
-     * Generate a user activation key
+     * Generate a user activation key.
      * @return string
      */
     public function generateActivationKey() : string
@@ -604,7 +604,7 @@ class Users extends Model
     }
 
     /**
-     * get the user sex, not get sex from the user :P
+     * get the user sex, not get sex from the user :P.
      *
      * @return string
      */
@@ -620,7 +620,7 @@ class Users extends Model
     }
 
     /**
-     * Log a user out of the system
+     * Log a user out of the system.
      *
      * @return boolean
      */
@@ -633,7 +633,7 @@ class Users extends Model
     }
 
     /**
-     * Clean the user session from the system
+     * Clean the user session from the system.
      *
      * @return true
      */
@@ -646,7 +646,7 @@ class Users extends Model
     }
 
     /**
-     * Give the user a order array with the user configuration
+     * Give the user a order array with the user configuration.
      */
     public function getConfig() : array
     {
@@ -668,7 +668,7 @@ class Users extends Model
     }
 
     /**
-     * get the obj of the current user config
+     * get the obj of the current user config.
      *
      * @return UserConfig
      */
@@ -681,7 +681,7 @@ class Users extends Model
     }
 
     /**
-     * get the user session id
+     * get the user session id.
      *
      * @return string
      */
@@ -706,7 +706,7 @@ class Users extends Model
     }
 
     /**
-     * get the user language
+     * get the user language.
      *
      * @return string
      */
@@ -730,7 +730,7 @@ class Users extends Model
     }
 
     /**
-     * Get the language user prefix
+     * Get the language user prefix.
      *
      * @return string
      */
@@ -758,7 +758,7 @@ class Users extends Model
     }
 
     /**
-     * Determine if a user is banned
+     * Determine if a user is banned.
      *
      * @return bool
      */
@@ -772,7 +772,7 @@ class Users extends Model
     }
 
     /**
-     * Given a firstname give me a random username
+     * Given a firstname give me a random username.
      *
      * @param string $displayname
      * @param integer $randNo
@@ -792,7 +792,7 @@ class Users extends Model
     }
 
     /**
-     * Update the password for a current user
+     * Update the password for a current user.
      *
      * @param string $newPassword
      * @return boolean
@@ -855,7 +855,7 @@ class Users extends Model
     /**
      * What to do after the creation of a new users
      *  - Company
-     *  - add notification for this user
+     *  - add notification for this user.
      *
      * @return void
      */

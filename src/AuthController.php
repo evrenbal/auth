@@ -20,7 +20,7 @@ abstract class AuthController extends BaseController
     protected $userModel;
 
     /**
-     * Setup for this controller
+     * Setup for this controller.
      *
      * @return void
      */
@@ -35,7 +35,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User Login
+     * User Login.
      * @method POST
      * @url /v1/auth
      *
@@ -62,28 +62,16 @@ abstract class AuthController extends BaseController
             }
         }
 
-        //login the user
-        $random = new \Phalcon\Security\Random();
-
         $userData = Users::login($email, $password, $remember, $admin, $userIp);
 
-        $sessionId = $random->uuid();
-
-        //save in user logs
-        $payload = [
-            'sessionId' => $sessionId,
-            'email' => $userData->getEmail(),
-            'iat' => time(),
-        ];
-
-        $token = $this->auth->make($payload);
+        $token = $userData->getToken();
 
         //start session
         $session = new Sessions();
-        $session->start($userData, $sessionId, $token, $userIp, 1);
+        $session->start($userData, $token['sessionId'], $token['token'], $userIp, 1);
 
         return $this->response([
-            'token' => $token,
+            'token' => $token['token'],
             'time' => date('Y-m-d H:i:s'),
             'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
             'id' => $userData->getId(),
@@ -91,7 +79,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User Login
+     * User Login.
      * @method POST
      * @url /v1/login
      *
@@ -107,7 +95,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User Signup
+     * User Signup.
      *
      * @method POST
      * @url /v1/users
@@ -172,26 +160,14 @@ abstract class AuthController extends BaseController
             throw new Exception($e->getMessage());
         }
 
-        //login the user
-        $random = new \Phalcon\Security\Random();
-
-        $sessionId = $random->uuid();
-
-        //save in user logs
-        $payload = [
-            'sessionId' => $sessionId,
-            'email' => $user->getEmail(),
-            'iat' => time(),
-        ];
-
-        $token = $this->auth->make($payload);
+        $token = $user->getToken();
 
         //start session
         $session = new Sessions();
-        $session->start($user, $sessionId, $token, $userIp, 1);
+        $session->start($user, $token['sessionId'], $token['token'], $userIp, 1);
 
         $authSession = [
-            'token' => $token,
+            'token' => $token['token'],
             'time' => date('Y-m-d H:i:s'),
             'expires' => date('Y-m-d H:i:s', time() + $this->config->jwt->payload->exp),
             'id' => $user->getId(),
@@ -207,7 +183,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * Recover user information, by getting the email for the reset pass form
+     * Recover user information, by getting the email for the reset pass form.
      * @method POST
      * @url /v1/recover
      *
@@ -232,7 +208,7 @@ abstract class AuthController extends BaseController
         /**
          * check if the user email exist
          * if it does creat the user activation key to send
-         * send the user email
+         * send the user email.
          *
          * if it doesnt existe then send the erro msg
          */
@@ -250,7 +226,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * Reset the user password
+     * Reset the user password.
      * @method PUT
      * @url /v1/reset
      *
@@ -310,7 +286,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * User activation from the email signup
+     * User activation from the email signup.
      * @method PUT
      * @url /v1/activate
      *
@@ -347,7 +323,7 @@ abstract class AuthController extends BaseController
     }
 
     /**
-     * Set the email config array we are going to be sending
+     * Set the email config array we are going to be sending.
      *
      * @param String $emailAction
      * @param Users  $user

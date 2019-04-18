@@ -14,7 +14,8 @@
         "phalcon/incubator": "~3.0",
         "baka/database": "^0.1",
         "baka/http": "^0.1",
-        "robmorgan/phinx": "^0.10"
+        "robmorgan/phinx": "^0.10",
+        "lcobucci/jwt": "^3.2"
     },
     "require-dev": {
         "codeception/verify": "*",
@@ -25,13 +26,11 @@
     "autoload": {
         "psr-4": {
             "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models\\": "src/models/"
         }
     },
     "autoload-dev": {
         "psr-4": {
             "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models\\": "src/models/"
         }
     }
 }
