@@ -37,6 +37,9 @@ abstract class UsersController extends CrudExtendedController
     public function onConstruct()
     {
         $this->model = new Users();
+        $this->additionalSearchFields = [
+            ['id', ':', $this->userData->getId()],
+        ];
     }
 
     /**
@@ -51,10 +54,6 @@ abstract class UsersController extends CrudExtendedController
      */
     public function index($id = null) : Response
     {
-        $this->additionalSearchFields = [
-            ['id', ':', $this->userData->getId()],
-        ];
-
         return parent::index();
     }
 
