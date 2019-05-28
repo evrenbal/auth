@@ -11,7 +11,7 @@ use Phalcon\Validation\Validator\Confirmation;
 use Phalcon\Validation\Validator\Email as EmailValidator;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\StringLength;
-use Baka\Http\Rest\BaseController;
+use Baka\Http\Api\BaseController;
 use Baka\Auth\Models\Sessions;
 
 abstract class AuthController extends BaseController

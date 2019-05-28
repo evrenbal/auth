@@ -6,15 +6,17 @@ use Baka\Auth\Models\Users;
 use Baka\Auth\Models\Companies;
 use Phalcon\Http\Response;
 use Exception;
-use Baka\Http\Rest\CrudExtendedController;
-use Baka\Http\QueryParser;
+use Baka\Http\Api\BaseController;
+use Baka\Http\Converter\RequestUriToSql;
+use Baka\Http\Contracts\Api\CrudBehaviorTrait;
 
 /**
- * Base controller
+ * Base controller.
  *
  */
-abstract class UsersController extends CrudExtendedController
+abstract class UsersController extends BaseController
 {
+    use CrudBehaviorTrait;
     /*
      * fields we accept to create
      *
@@ -30,21 +32,21 @@ abstract class UsersController extends CrudExtendedController
     protected $updateFields = ['name', 'firstname', 'lastname',  'displayname', 'email', 'password', 'created_at', 'updated_at', 'default_company', 'sex', 'timezone'];
 
     /**
-     * set objects
+     * set objects.
      *
      * @return void
      */
     public function onConstruct()
     {
         $this->model = new Users();
-        
+
         $this->additionalSearchFields = [
             ['id', ':', $this->userData->getId()],
         ];
     }
 
     /**
-     * Get Uer
+     * Get Uer.
      *
      * @param mixed $id
      *
@@ -66,8 +68,7 @@ abstract class UsersController extends CrudExtendedController
         //get relationship
         if ($this->request->hasQuery('relationships')) {
             $relationships = $this->request->getQuery('relationships', 'string');
-
-            $user = QueryParser::parseRelationShips($relationships, $user);
+            $user = RequestUriToSql::parseRelationShips($relationships, $user);
         }
 
         if ($user) {
@@ -78,7 +79,7 @@ abstract class UsersController extends CrudExtendedController
     }
 
     /**
-     * Update a User Info
+     * Update a User Info.
      *
      * @method PUT
      * @url /v1/users/{id}
@@ -123,7 +124,7 @@ abstract class UsersController extends CrudExtendedController
     }
 
     /**
-     * Add a new user
+     * Add a new user.
      *
      * @method POST
      * @url /v1/users
@@ -134,5 +135,6 @@ abstract class UsersController extends CrudExtendedController
     public function create() : Response
     {
         throw new Exception('Route not found');
+        return $this->response('Route not found');
     }
 }
