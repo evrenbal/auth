@@ -58,7 +58,7 @@ abstract class UsersController extends BaseController
     public function getById($id) : Response
     {
         //find the info
-        $user = $this->model->findFirst([
+        $user = $this->model->findFirstOrFail([
             'id = ?0 AND is_deleted = 0',
             'bind' => [$this->userData->getId()],
         ]);
@@ -71,11 +71,7 @@ abstract class UsersController extends BaseController
             $user = RequestUriToSql::parseRelationShips($relationships, $user);
         }
 
-        if ($user) {
-            return $this->response($user);
-        } else {
-            throw new Exception('Record not found');
-        }
+        return $this->response($user);
     }
 
     /**
@@ -88,39 +84,33 @@ abstract class UsersController extends BaseController
      */
     public function edit($id) : Response
     {
-        if ($user = $this->model->findFirst($this->userData->getId())) {
-            $request = $this->request->getPut();
+        $user = $this->model->findFirstOrFail($this->userData->getId());
 
-            if (empty($request)) {
-                $request = $this->request->getJsonRawBody(true);
-            }
+        $request = $this->request->getPut();
 
-            //clean pass
-            if (array_key_exists('password', $request) && !empty($request['password'])) {
-                $user->password = Users::passwordHash($request['password']);
-                unset($request['password']);
-            }
-
-            //clean default company
-            if (array_key_exists('default_company', $request)) {
-                //@todo check if I belong to this company
-                if ($company = Companies::findFirst($request['default_company'])) {
-                    $user->default_company = $company->getId();
-                    unset($request['default_company']);
-                }
-            }
-
-            //update
-            if ($user->update($request, $this->updateFields)) {
-                $user->password = null;
-                return $this->response($user);
-            } else {
-                //didnt work
-                throw new Exception($user->getMessages()[0]);
-            }
-        } else {
-            throw new Exception('Record not found');
+        if (empty($request)) {
+            $request = $this->request->getJsonRawBody(true);
         }
+
+        //clean pass
+        if (array_key_exists('password', $request) && !empty($request['password'])) {
+            $user->password = Users::passwordHash($request['password']);
+            unset($request['password']);
+        }
+
+        //clean default company
+        if (array_key_exists('default_company', $request)) {
+            //@todo check if I belong to this company
+            if ($company = Companies::findFirst($request['default_company'])) {
+                $user->default_company = $company->getId();
+                unset($request['default_company']);
+            }
+        }
+
+        //update
+        $user->updateOrFail($request, $this->updateFields);
+        $user->password = null;
+        return $this->response($user);
     }
 
     /**
