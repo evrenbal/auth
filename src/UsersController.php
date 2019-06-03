@@ -7,7 +7,6 @@ use Baka\Auth\Models\Companies;
 use Phalcon\Http\Response;
 use Exception;
 use Baka\Http\Api\BaseController;
-use Baka\Http\Converter\RequestUriToSql;
 use Baka\Http\Contracts\Api\CrudBehaviorTrait;
 
 /**
@@ -63,15 +62,10 @@ abstract class UsersController extends BaseController
             'bind' => [$this->userData->getId()],
         ]);
 
-        $user->password = null;
+        //get the results and append its relationships
+        $user = $this->appendRelationshipsToResult($this->request, $user);
 
-        //get relationship
-        if ($this->request->hasQuery('relationships')) {
-            $relationships = $this->request->getQuery('relationships', 'string');
-            $user = RequestUriToSql::parseRelationShips($relationships, $user);
-        }
-
-        return $this->response($user);
+        return $this->response($this->processOutput($user));
     }
 
     /**
@@ -109,8 +103,23 @@ abstract class UsersController extends BaseController
 
         //update
         $user->updateOrFail($request, $this->updateFields);
-        $user->password = null;
-        return $this->response($user);
+        return $this->response($this->processOutput($user));
+    }
+
+    /**
+     * Given the results we will proess the output
+     * we will check if a DTO transformer exist and if so we will send it over to change it.
+     *
+     * @param object|array $results
+     * @return void
+     */
+    protected function processOutput($results)
+    {
+        //remove the user password
+        if (is_object($results)) {
+            $results->password = null;
+        }
+        return $results;
     }
 
     /**
