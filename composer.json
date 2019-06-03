@@ -6,15 +6,15 @@
         "name": "kaioken",
         "email": "max@mctekk.com"
     }],
-    "minimum-stability": "dev",
     "require": {
-        "php": ">=7.1",
+        "php": ">=7.2",
         "ext-phalcon": ">=3.0.0",
         "vlucas/phpdotenv": "^2.0",
         "phalcon/incubator": "~3.0",
-        "baka/database": "^0.1",
-        "baka/http": "^0.1",
-        "robmorgan/phinx": "^0.10"
+        "baka/database": "^0.5",
+        "baka/http": "^0.5",
+        "robmorgan/phinx": "^0.10",
+        "lcobucci/jwt": "^3.2"
     },
     "require-dev": {
         "codeception/verify": "*",
@@ -24,14 +24,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models\\": "src/models/"
+            "Baka\\Auth\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Baka\\Auth\\": "src/",
-            "Baka\\Auth\\Models\\": "src/models/"
+            "Baka\\Auth\\": "src/"
         }
     }
 }
