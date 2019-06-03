@@ -44,21 +44,6 @@ abstract class UsersController extends BaseController
     }
 
     /**
-     * List of Users, but always returns the one user
-     *
-     * @method GET
-     * url /v1/users
-     *
-     * @param int $id
-     * @todo if admin return all the users
-     * @return \Phalcon\Http\Response
-     */
-    public function index($id = null) : Response
-    {
-        return parent::index();
-    }
-
-    /**
      * Get Uer.
      *
      * @param mixed $id
