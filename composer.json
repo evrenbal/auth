@@ -18,9 +18,8 @@
     },
     "require-dev": {
         "codeception/verify": "*",
-        "vlucas/phpdotenv": "^2.0",
         "phalcon/incubator": "~3.0",
-        "odan/phinx-migrations-generator": "dev-master"
+        "odan/phinx-migrations-generator": "^4"
     },
     "autoload": {
         "psr-4": {
