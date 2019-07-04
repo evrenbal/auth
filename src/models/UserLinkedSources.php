@@ -48,9 +48,12 @@ class UserLinkedSources extends Model
     {
         $validator = new Validation();
         $validator->add(
+            [
             'users_id',
+            'source_id'
+            ],
             new Uniqueness([
-                'field' => ['users_id', 'source_users_id'],
+                'field' => ['users_id', 'source_id'],
                 'message' => _('You have already associated this account.'),
             ])
         );
