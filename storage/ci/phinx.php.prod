@@ -4,8 +4,12 @@
 
 return [
     'paths' => [
-        'migrations' => getenv('PHINX_CONFIG_DIR') . '/db/migrations',
-        'seeds' => getenv('PHINX_CONFIG_DIR') . '/db/seeds',
+        'migrations' => [
+            '/storage/db/migrations',
+        ],
+        'seeds' => [
+            '/storage/db/seeds',
+        ]
     ],
     'environments' => [
         'default_migration_table' => 'ut_migrations',
