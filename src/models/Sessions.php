@@ -8,6 +8,8 @@ namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
 use Exception;
+use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Signer\Hmac\Sha512;
 
 class Sessions extends Model
 {
@@ -289,5 +291,50 @@ class Sessions extends Model
         SessionKeys::find('users_id = ' . $user->getId())->delete();
 
         return true;
+    }
+
+    /**
+     * Check auth session status and create a new one if there is none.
+     *
+     * @param Users $user
+     * @param string $sessionId
+     * @param string $clientAddress
+     * @return array
+     */
+    public static function restart(Users $user, string $sessionId, string $clientAddress): array
+    {
+        $session = new Sessions();
+        $session->check($user, $sessionId, $clientAddress, 1);
+        $token = self::refresh($sessionId, $user->email);
+        $session->start($user, $token['sessionId'], $token['token'], $clientAddress, 1);
+        return $token;
+    }
+
+    /**
+     * Create a new session based off the refresh token session id.
+     *
+     * @param string $sessionId
+     * @param string $email
+     * @return array
+     */
+    public function refresh(string $sessionId, string $email): array
+    {
+        $signer = new Sha512();
+        $builder = new Builder();
+        $token = $builder
+            ->setIssuer(getenv('TOKEN_AUDIENCE'))
+            ->setAudience(getenv('TOKEN_AUDIENCE'))
+            ->setId($sessionId, true)
+            ->setIssuedAt(time())
+            ->setNotBefore(time() + 500)
+            ->setExpiration(time() + getenv('APP_JWT_SESSION_EXPIRATION'))
+            ->set('sessionId', $sessionId)
+            ->set('email', $email)
+            ->sign($signer, getenv('TOKEN_PASSWORD'))
+            ->getToken();
+        return [
+            'sessionId' => $sessionId,
+            'token' => $token->__toString()
+        ];
     }
 }
