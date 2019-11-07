@@ -47,9 +47,22 @@ trait AuthTokenTrait
             ->sign($signer, getenv('TOKEN_PASSWORD'))
             ->getToken();
 
+        $refreshToken = $builder
+            ->setIssuer(getenv('TOKEN_AUDIENCE'))
+            ->setAudience(getenv('TOKEN_AUDIENCE'))
+            ->setId($sessionId, true)
+            ->setIssuedAt(time())
+            ->setNotBefore(time() + 500)
+            ->setExpiration(time() + $this->di->getConfig()->jwt->payload->refresh_exp)
+            ->set('sessionId', $sessionId)
+            ->set('email', $this->getEmail())
+            ->sign($signer, getenv('TOKEN_PASSWORD'))
+            ->getToken();
+
         return [
             'sessionId' => $sessionId,
-            'token' => $token->__toString()
+            'token' => $token->__toString(),
+            'refresh_token' => $refreshToken->__toString()
         ];
     }
 
