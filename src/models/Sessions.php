@@ -303,7 +303,7 @@ class Sessions extends Model
      */
     public static function restart(Users $user, string $sessionId, string $clientAddress): array
     {
-        $session = new Sessions();
+        $session = new self();
         $session->check($user, $sessionId, $clientAddress, 1);
         $token = self::refresh($sessionId, $user->email);
         $session->start($user, $token['sessionId'], $token['token'], $clientAddress, 1);
