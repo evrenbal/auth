@@ -13,14 +13,13 @@
         "phalcon/incubator": "~3.0",
         "baka/database": "^0.5",
         "baka/http": "^0.5",
-        "robmorgan/phinx": "^0.10",
         "lcobucci/jwt": "^3.2"
     },
     "require-dev": {
         "codeception/verify": "*",
-        "vlucas/phpdotenv": "^2.0",
         "phalcon/incubator": "~3.0",
-        "odan/phinx-migrations-generator": "dev-master"
+        "robmorgan/phinx": "^0.11",
+        "odan/phinx-migrations-generator": "^4"
     },
     "autoload": {
         "psr-4": {

@@ -269,7 +269,7 @@ class Users extends Model
             $options = ['cache' => ['lifetime' => 3600, 'key' => $key]];
         }
 
-        if ($userData = Users::findFirstById($userId, $options)) {
+        if ($userData = self::findFirstById($userId, $options)) {
             return $userData;
         } else {
             throw new Exception(_('The specified user does not exist in our database.'));

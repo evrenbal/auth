@@ -1,14 +1,15 @@
 <?php
 
 /**
- * JWT Session Token Manager
+ * JWT Session Token Manager.
  */
 
 namespace Baka\Auth\Models;
 
 use Baka\Database\Model;
 use Exception;
-use Throwable;
+use Lcobucci\JWT\Builder;
+use Lcobucci\JWT\Signer\Hmac\Sha512;
 
 class Sessions extends Model
 {
@@ -58,16 +59,16 @@ class Sessions extends Model
     public $is_admin;
 
     /**
-     * almecenamos la info del usuario par ahacer singlation
+     * almecenamos la info del usuario par ahacer singlation.
      *
-     * @var phpbbSession
+     * @var user
      */
     public static $userData = null;
 
     public $config;
 
     /**
-     * Initialize
+     * Initialize.
      */
     public function initialize()
     {
@@ -76,7 +77,7 @@ class Sessions extends Model
     }
 
     /**
-     * Create a new session token for the given users, to track on the db
+     * Create a new session token for the given users, to track on the db.
      *
      * @param Users $user
      * @param string $sessionId
@@ -120,8 +121,9 @@ class Sessions extends Model
         }
 
         /**
-         * Create or update the session
-         * @todo we dont need a new session for every getenv('ANONYMOUS') user, use less , right now 27.7.15 90% of the sessions are for that type of users
+         * Create or update the session.
+         * @todo we dont need a new session for every getenv('ANONYMOUS') user, use less ,
+         * right now 27.7.15 90% of the sessions are for that type of users
          */
         $session = new self();
         $session->users_id = $user->getId();
@@ -166,7 +168,7 @@ class Sessions extends Model
 
     /**
      * Checks for a given user session, tidies session table and updates user
-     * sessions at each page refresh
+     * sessions at each page refresh.
      *
      * @param Users $user
      * @param string $sessionId
@@ -191,8 +193,8 @@ class Sessions extends Model
 
         $result = $this->getModelsManager()->createQuery($sql);
         $result = $result->execute([
-                'session_id' => $sessionId,
-            ]);
+            'session_id' => $sessionId,
+        ]);
 
         //session data
         $userData = $result->getFirst();
@@ -210,85 +212,52 @@ class Sessions extends Model
         // Did the session exist in the DB?
         //
         if ($userData->user) {
-            //
-            // Do not check IP assuming equivalence, if IPv4 we'll check only first 24
-            // bits ... I've been told (by vHiker) this should alleviate problems with
-            // load balanced et al proxies while retaining some reliance on IP security.
-            /**
-             * @todo reviar esto del chekeo de las ips
-             */
-            $ip_check_s = substr($userData->session->ip, 0, 6);
-            $ip_check_u = substr($userIp, 0, 6);
+            // Only update session DB a minute or so after last update
+            if ($currentTime - $userData->session->time > 60) {
+                //update the user session
+                $session = self::findFirstById($sessionId);
+                $session->session_time = $currentTime;
+                $session->session_page = $pageId;
 
-            if ($ip_check_s == $ip_check_u) {
-                //
-                // Only update session DB a minute or so after last update
-                //
-                if ($currentTime - $userData->session->time > 60) {
-                    //update the user session
-                    $session = self::findFirstById($sessionId);
-                    $session->session_time = $currentTime;
-                    $session->session_page = $pageId;
-
-                    if (!$session->update()) {
-                        throw new Exception(current($session->getMessages()));
-                    }
-
-                    //update user
-                    $user->users_id = $userData->user->getId();
-                    $user->session_time = $currentTime;
-                    $user->session_page = $pageId;
-                    $user->update();
-
-                    $this->clean($sessionId);
+                if (!$session->update()) {
+                    throw new Exception(current($session->getMessages()));
                 }
 
-                $user->session_id = $sessionId;
+                //update user
+                $user->users_id = $userData->user->getId();
+                $user->session_time = $currentTime;
+                $user->session_page = $pageId;
+                $user->update();
 
-                return $user;
+                //$this->clean($sessionId);
             }
+
+            $user->session_id = $sessionId;
+
+            return $user;
         }
 
         throw new Exception(_('No Session Token Found'));
     }
 
     /**
-     * Removes expired sessions and auto-login keys from the database
+     * Removes expired sessions and auto-login keys from the database.
      *
-     * @param string $sessionId
      * @param boolean $daemon
      * @return void
      */
-    public function clean(string $sessionId, $daemon = false): bool
+    public function clean(): bool
     {
-        //we sent the session id to the seassion daemon cleaner
-        if (!$daemon) {
-            try {
-                $queue = $this->getDI()->getQueue();
-                $queue->putInTube(getenv('SESSION_QUEUE'), $sessionId);
-            } catch (Throwable $e) {
-                //we get here if beanstalkd is down, we are moving to rabbitmq
-                $this->di->getLog()->error($e->getMessage());
-                return false;
-            }
-
-            return true;
-        }
-
-        $cache = $this->getDI()->getRedis();
-
         //
         // Delete expired sessions
         //
         $sql = "DELETE FROM  Baka\Auth\Models\Sessions
-            WHERE time < :session_time:
-                AND id <> :session_id: ";
+            WHERE time < :session_time:";
 
         $sessionTime = time() - (int) $this->getDI()->getConfig()->jwt->payload->exp;
 
         $params = [
             'session_time' => $sessionTime,
-            'session_id' => $sessionId,
         ];
 
         $result = $this->getModelsManager()->executeQuery($sql, $params);
@@ -311,7 +280,7 @@ class Sessions extends Model
     /**
      * Terminates the specified session
      * It will delete the entry in the sessions table for this session,
-     * remove the corresponding auto-login key and reset the cookies
+     * remove the corresponding auto-login key and reset the cookies.
      *
      * @param Users $user
      * @return boolean
@@ -322,5 +291,50 @@ class Sessions extends Model
         SessionKeys::find('users_id = ' . $user->getId())->delete();
 
         return true;
+    }
+
+    /**
+     * Check auth session status and create a new one if there is none.
+     *
+     * @param Users $user
+     * @param string $sessionId
+     * @param string $clientAddress
+     * @return array
+     */
+    public static function restart(Users $user, string $sessionId, string $clientAddress): array
+    {
+        $session = new self();
+        $session->check($user, $sessionId, $clientAddress, 1);
+        $token = self::refresh($sessionId, $user->email);
+        $session->start($user, $token['sessionId'], $token['token'], $clientAddress, 1);
+        return $token;
+    }
+
+    /**
+     * Create a new session based off the refresh token session id.
+     *
+     * @param string $sessionId
+     * @param string $email
+     * @return array
+     */
+    public function refresh(string $sessionId, string $email): array
+    {
+        $signer = new Sha512();
+        $builder = new Builder();
+        $token = $builder
+            ->setIssuer(getenv('TOKEN_AUDIENCE'))
+            ->setAudience(getenv('TOKEN_AUDIENCE'))
+            ->setId($sessionId, true)
+            ->setIssuedAt(time())
+            ->setNotBefore(time() + 500)
+            ->setExpiration(time() + getenv('APP_JWT_SESSION_EXPIRATION'))
+            ->set('sessionId', $sessionId)
+            ->set('email', $email)
+            ->sign($signer, getenv('TOKEN_PASSWORD'))
+            ->getToken();
+        return [
+            'sessionId' => $sessionId,
+            'token' => $token->__toString()
+        ];
     }
 }
